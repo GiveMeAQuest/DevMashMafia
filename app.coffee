@@ -1,3 +1,5 @@
+require 'coffee-script/register'
+require 'coffee-script'
 express = require 'express'
 path = require 'path'
 favicon = require 'serve-favicon'
@@ -7,7 +9,6 @@ bodyParser = require 'body-parser'
 http = require 'http'
 
 routes = require './routes/index'
-users = require './routes/users'
 
 app = express()
 
@@ -24,7 +25,6 @@ app.use cookieParser()
 app.use express.static path.join __dirname, 'public'
 
 app.use '/', routes
-app.use '/users', users
 
 # catch 404 and forward to error handler
 app.use (req, res, next)->
@@ -52,7 +52,7 @@ app.use (err, req, res, next)->
 
 module.exports = app
 
-app.set 'port', 3000
+app.set 'port', process.env.PORT or 3000
 server = http.createServer app
 server.listen app.get 'port'
 server.on 'listening', ->
