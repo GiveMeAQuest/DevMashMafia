@@ -2,4 +2,4 @@ class Phase
 
 	constructor: (@name)->
 
-	role: String
+	activeRole: String
