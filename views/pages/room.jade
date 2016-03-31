@@ -1,0 +1,7 @@
+.panel.panel-info
+	.panel-heading
+		h3 {{room.name}}
+			.pull-right: button.btn.btn-default Leave room
+	table.table.table-bordered.table-responsive.table-hover
+		tr(ng-repeat='player in players track by $index')
+			td {{player.nickname}}

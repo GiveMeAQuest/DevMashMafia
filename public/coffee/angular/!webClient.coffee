@@ -1,4 +1,4 @@
-webClient = angular.module 'webClient', ['ngRoute']
+webClient = angular.module 'webClient', ['ngRoute', 'ui.bootstrap']
 
 webClient.config ['$routeProvider', ($routeProvider)->
 	$routeProvider
@@ -8,7 +8,7 @@ webClient.config ['$routeProvider', ($routeProvider)->
 		controller: 'roomsCtrl'
 
 	.when '/room/:id',
-		templateUrl: '/pages/room',
+		templateUrl: (params)-> "/pages/room/#{params.id}",
 		controller: 'roomCtrl'
 
 	.otherwise

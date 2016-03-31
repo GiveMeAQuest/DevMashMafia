@@ -1,3 +1,12 @@
+script(type='text/ng-template', id='authModal')
+	.modal-header
+		h3.modal-title {{title}}
+	form(name='authForm', novalidate)
+		.modal-body
+			input.form-control(type='text', ng-model='nickname', placeholder='Enter nickname', required)
+		.modal-footer
+			button.btn.btn-primary(ng-click='ok()', ng-disabled='authForm.$invalid') Enter room
+
 div(ng-if='loading')
 	include ../loading
 table.table.table-responsive.table-hover.table-bordered.table-striped#roomsTable(ng-if='!loading')
