@@ -1,4 +1,7 @@
-webClient.controller 'roomCtrl', ['$scope', '$routeParams', '$q', 'socket', ($scope, $routeParams, $q, socket)->
+webClient.controller 'roomCtrl', ['$scope', '$rootScope', '$routeParams', '$q', 'socket', ($scope, $rootScope, $routeParams, $q, socket)->
+
+	if !$rootScope.player?
+		$location.url '/'
 
 	roomInit = $q.defer()
 	playersInit = $q.defer()
@@ -7,16 +10,21 @@ webClient.controller 'roomCtrl', ['$scope', '$routeParams', '$q', 'socket', ($sc
 	$scope.room.id = $routeParams.id
 
 	socket.on 'room', (room)->
-		console.log room
 		$scope.room = JSON.parse room
 		$scope.$apply()
 
 	socket.on 'players', (players)->
-		console.log players
 		$scope.players = JSON.parse players
 		$scope.$apply()
 
 	socket.emit 'get room', $scope.room.id
 	socket.emit 'get waiting players', $scope.room.id
+
+	socket.on 'room left', ->
+			$location.url '/'
+			$scope.$apply()
+
+	$scope.leaveRoom = ->
+		socket.emit 'leave room', $rootScope.player.id
 
 ]

@@ -1,4 +1,4 @@
-webClient.controller 'roomsCtrl', ['$scope', '$location', '$uibModal', 'socket', ($scope, $location, $uibModal, socket)->
+webClient.controller 'roomsCtrl', ['$scope', '$rootScope', '$location', '$uibModal', 'socket', ($scope, $rootScope, $location, $uibModal, socket)->
 
 	$scope.loading = true
 
@@ -20,7 +20,9 @@ webClient.controller 'roomsCtrl', ['$scope', '$location', '$uibModal', 'socket',
 		do(room)->
 			authModal.result.then (nickname)->
 
-				socket.on 'logged', ->
+				socket.on 'logged', (player)->
+					if typeof player is 'string' then player = JSON.parse player
+					$rootScope.player = player
 					$location.url "/room/#{room.id}"
 					$scope.$apply()
 

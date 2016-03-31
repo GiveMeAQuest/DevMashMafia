@@ -372,29 +372,37 @@ webClient.config([
 webClient.controller('mainCtrl', ['$scope', '$rootScope', function($scope, $rootScope) {}]);
 
 webClient.controller('roomCtrl', [
-  '$scope', '$routeParams', '$q', 'socket', function($scope, $routeParams, $q, socket) {
+  '$scope', '$rootScope', '$routeParams', '$q', 'socket', function($scope, $rootScope, $routeParams, $q, socket) {
     var playersInit, roomInit;
+    if ($rootScope.player == null) {
+      $location.url('/');
+    }
     roomInit = $q.defer();
     playersInit = $q.defer();
     $scope.room = {};
     $scope.room.id = $routeParams.id;
     socket.on('room', function(room) {
-      console.log(room);
       $scope.room = JSON.parse(room);
       return $scope.$apply();
     });
     socket.on('players', function(players) {
-      console.log(players);
       $scope.players = JSON.parse(players);
       return $scope.$apply();
     });
     socket.emit('get room', $scope.room.id);
-    return socket.emit('get waiting players', $scope.room.id);
+    socket.emit('get waiting players', $scope.room.id);
+    socket.on('room left', function() {
+      $location.url('/');
+      return $scope.$apply();
+    });
+    return $scope.leaveRoom = function() {
+      return socket.emit('leave room', $rootScope.player.id);
+    };
   }
 ]);
 
 webClient.controller('roomsCtrl', [
-  '$scope', '$location', '$uibModal', 'socket', function($scope, $location, $uibModal, socket) {
+  '$scope', '$rootScope', '$location', '$uibModal', 'socket', function($scope, $rootScope, $location, $uibModal, socket) {
     $scope.loading = true;
     socket.on('rooms', function(rooms) {
       $scope.rooms = JSON.parse(rooms);
@@ -416,7 +424,11 @@ webClient.controller('roomsCtrl', [
       });
       return (function(room) {
         return authModal.result.then(function(nickname) {
-          socket.on('logged', function() {
+          socket.on('logged', function(player) {
+            if (typeof player === 'string') {
+              player = JSON.parse(player);
+            }
+            $rootScope.player = player;
             $location.url("/room/" + room.id);
             return $scope.$apply();
           });
