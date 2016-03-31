@@ -14,8 +14,14 @@ module.exports = (server)->
 		socket.on CONFIG['login'], (data)->
 			if typeof data is 'string' then data = JSON.parse data
 			console.log "login with nickname #{data.nickname} to room ID #{data.room_id}"
-			pg.query "INSERT INTO players (nickname, room_id) VALUES ('#{data.nickname}', '#{data.room_id}');", (result)->
-				socket.emit CONFIG['logged']
+			pg.query "SELECT * FROM players WHERE nickname='#{data.nickname}' AND room_id=#{data.room_id};", (result)->
+				if result.rows.length > 0
+					socket.emit 'err', JSON.stringify
+						error: 'Player with such username already logged in to this room'
+				else
+					pg.query "INSERT INTO players (nickname, room_id) VALUES ('#{data.nickname}', '#{data.room_id}');", (result)->
+						pg.query "SELECT * FROM players WHERE nickname='#{data.nickname}' AND room_id=#{data.room_id};", (result)->
+							socket.emit CONFIG['logged'], JSON.stringify result.rows[0]
 
 		socket.on CONFIG['get room'], (roomid)->
 			console.log "get room #{roomid}"

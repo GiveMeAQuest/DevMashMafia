@@ -21,5 +21,8 @@ webClient.factory 'socket', ['$rootScope', '$q', '$http', ($rootScope, $q, $http
 			emit: (event, data)->
 				$q.all([socketReady.promise, configReady.promise]).then ->
 					socket.emit CONFIG[event], data
+
+			removeAllListeners: (event)->
+				socket.removeAllListeners CONFIG[event]
 		}
 ]

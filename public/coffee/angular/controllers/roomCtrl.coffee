@@ -1,5 +1,5 @@
-webClient.controller 'roomCtrl', ['$scope', '$rootScope', '$routeParams', '$q', 'socket', ($scope, $rootScope, $routeParams, $q, socket)->
-
+webClient.controller 'roomCtrl', ['$scope', '$rootScope', '$routeParams', '$q', '$location', 'socket', ($scope, $rootScope, $routeParams, $q, $location, socket)->
+	
 	if !$rootScope.player?
 		$location.url '/'
 

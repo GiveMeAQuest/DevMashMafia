@@ -372,7 +372,7 @@ webClient.config([
 webClient.controller('mainCtrl', ['$scope', '$rootScope', function($scope, $rootScope) {}]);
 
 webClient.controller('roomCtrl', [
-  '$scope', '$rootScope', '$routeParams', '$q', 'socket', function($scope, $rootScope, $routeParams, $q, socket) {
+  '$scope', '$rootScope', '$routeParams', '$q', '$location', 'socket', function($scope, $rootScope, $routeParams, $q, $location, socket) {
     var playersInit, roomInit;
     if ($rootScope.player == null) {
       $location.url('/');
@@ -425,9 +425,11 @@ webClient.controller('roomsCtrl', [
       return (function(room) {
         return authModal.result.then(function(nickname) {
           socket.on('logged', function(player) {
+            socket.removeAllListeners('logged');
             if (typeof player === 'string') {
               player = JSON.parse(player);
             }
+            console.log(player);
             $rootScope.player = player;
             $location.url("/room/" + room.id);
             return $scope.$apply();
@@ -475,6 +477,9 @@ webClient.factory('socket', [
         return $q.all([socketReady.promise, configReady.promise]).then(function() {
           return socket.emit(CONFIG[event], data);
         });
+      },
+      removeAllListeners: function(event) {
+        return socket.removeAllListeners(CONFIG[event]);
       }
     };
   }

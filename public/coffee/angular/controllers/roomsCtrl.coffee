@@ -21,7 +21,9 @@ webClient.controller 'roomsCtrl', ['$scope', '$rootScope', '$location', '$uibMod
 			authModal.result.then (nickname)->
 
 				socket.on 'logged', (player)->
+					socket.removeAllListeners 'logged'
 					if typeof player is 'string' then player = JSON.parse player
+					console.log player
 					$rootScope.player = player
 					$location.url "/room/#{room.id}"
 					$scope.$apply()
