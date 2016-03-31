@@ -10,3 +10,4 @@ module.exports =
 			client.query query, (err, result)->
 				if err then throw err
 				cb result
+				done()

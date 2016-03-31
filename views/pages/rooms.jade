@@ -1,0 +1,7 @@
+div(ng-if='loading')
+	include ../loading
+table.table.table-responsive.table-hover.table-bordered.table-striped#roomsTable(ng-if='!loading')
+	tr
+		th: h4 Rooms
+	tr(ng-repeat='room in rooms track by $index')
+		td(ng-click='joinRoom(room)') {{room.name}}

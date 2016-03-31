@@ -7,15 +7,15 @@ module.exports = (grunt)->
 				options:
 					shorthandCompacting: false
 					roundingPrecision: -1
-				src: ['public/stylesheets/*.css', '!public/stylesheets/all.css']
-				dest: 'public/stylesheets/all.css'
+				src: ['public/css/*.css', '!public/css/all.css']
+				dest: 'public/css/all.css'
 				
 		coffee:
 			compile:
 				expand: true
 				cwd: 'public/coffee'
 				src: '**/*.coffee'
-				dest: 'public/javascripts/compiled'
+				dest: 'public/js/compiled'
 				ext: '.js'
 				flatten: true
 				options:
@@ -23,24 +23,24 @@ module.exports = (grunt)->
 		
 		uglify:
 			minify:
-				src: 'public/javascripts/compiled/*.js'
-				dest: 'public/javascripts/all.js'
+				src: 'public/js/compiled/*.js'
+				dest: 'public/js/all_compiled.js'
 				options:
 					bare: true
 		
 		concat:
 			addSource:
-				src: ['public/javascripts/source/*.js', 'public/javascripts/all.js']
-				dest: 'public/javascripts/all.js'
+				src: ['public/js/source/*.js', 'public/js/all.js']
+				dest: 'public/js/all.js'
 				options:
 					bare: true
 			full:
-				src: ['public/javascripts/source/*.js', 'public/javascripts/compiled/*.js']
-				dest: 'public/javascripts/all.js'
+				src: ['public/js/source/*.js', 'public/js/compiled/*.js']
+				dest: 'public/js/all.js'
 				options:
 					bare: true
 
-		clean: ['public/javascripts/compiled']
+		clean: ['public/js/compiled']
 
 		watch:
 			self:
@@ -49,10 +49,10 @@ module.exports = (grunt)->
 				files: ['public/**/*.coffee']
 				tasks: ['js']
 			js:
-				files: ['public/**/*.js', '!public/javascripts/compiled/*.js', '!public/javascripts/all.js']
+				files: ['public/**/*.js', '!public/js/compiled/*.js', '!public/js/all.js']
 				tasks: ['js']
 			css:
-				files: ['public/stylesheets/**/*.css', '!public/stylesheets/all.css']
+				files: ['public/css/**/*.css', '!public/css/all.css']
 				tasks: ['css']
 
 	grunt.loadNpmTasks 'grunt-contrib-coffee'

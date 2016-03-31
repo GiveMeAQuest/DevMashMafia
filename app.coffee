@@ -11,6 +11,7 @@ pg = require './pg'
 
 routes = require './routes/index'
 api = require './routes/api'
+pages = require './routes/pages'
 
 app = express()
 
@@ -28,6 +29,7 @@ app.use express.static path.join __dirname, 'public'
 
 app.use '/', routes
 app.use '/api', api
+app.use '/pages', pages
 
 # catch 404 and forward to error handler
 app.use (req, res, next)->
@@ -60,3 +62,5 @@ server = http.createServer app
 server.listen app.get 'port'
 server.on 'listening', ->
 	console.log 'Server running on port ' + app.get 'port'
+
+socket = require('./socket')(server)
