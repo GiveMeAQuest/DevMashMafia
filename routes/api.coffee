@@ -1,6 +1,6 @@
 express = require 'express'
 pg = require '../pg'
-CONFIG = require '../config'
+EVENTS = require '../events'
 router = express.Router()
 
 router.get '/user/:id', (req, res, next)->
@@ -11,7 +11,7 @@ router.get '/room/:id', (req, res, next)->
 	pg.query "SELECT rooms.id, rooms.name, phases.name AS phase FROM rooms, phases WHERE rooms.id=#{req.params.id} AND rooms.phase_id=phases.id;", (result)->
 		res.end JSON.stringify result.rows[0]
 
-router.get '/config', (req, res, next)->
-	res.end JSON.stringify CONFIG
+router.get '/events', (req, res, next)->
+	res.end JSON.stringify EVENTS
 
 module.exports = router

@@ -1,4 +1,4 @@
-CONFIG = require './config'
+EVENTS = require './events'
 pg = require './pg'
 Player = require './classes/Player'
 Phase = require './classes/Phase'
@@ -9,13 +9,13 @@ module.exports = (server)->
 	io.on 'connection', (socket)->
 		console.log 'new connection'
 
-		socket.on CONFIG['login'], (data)->
+		socket.on EVENTS['login'], (data)->
 			if typeof data is 'string' then data = JSON.parse data
 			console.log "login with nickname #{data.nickname} to room ID #{data.room_id}"
 			pg.query "SELECT * FROM players WHERE nickname='#{data.nickname}' AND room_id=#{data.room_id};", (result)->
 				if result.rows.length > 0
 					console.log 'Error: such user exists'
-					socket.emit CONFIG['err'], 'Player with such username has already logged in to this room'
+					socket.emit EVENTS['err'], 'Player with such username has already logged in to this room'
 				else
 					pg.query "INSERT INTO players (nickname, room_id) VALUES ('#{data.nickname}', '#{data.room_id}');", (result)->
 						pg.query "SELECT * FROM players WHERE nickname='#{data.nickname}' AND room_id=#{data.room_id};", (result)->
@@ -23,16 +23,16 @@ module.exports = (server)->
 							io.to(data.room_id).emit 'player logged', JSON.stringify player
 							socket.join data.room_id
 
-							socket.emit CONFIG['logged'], JSON.stringify player
+							socket.emit EVENTS['logged'], JSON.stringify player
 
-		socket.on CONFIG['get waiting players'], (roomid)->
+		socket.on EVENTS['get waiting players'], (roomid)->
 			console.log "get players of room ID #{roomid}"
 			pg.query "SELECT id, nickname FROM players WHERE players.room_id='#{roomid}';", (result)->
-				socket.emit CONFIG['players'], JSON.stringify result.rows
+				socket.emit EVENTS['players'], JSON.stringify result.rows
 
-		socket.on CONFIG['leave room'], (playerid)->
+		socket.on EVENTS['leave room'], (playerid)->
 			console.log "leave room ID #{playerid}"
 			pg.query "DELETE FROM players WHERE id=#{playerid};", ->
-				socket.emit CONFIG['room left']
+				socket.emit EVENTS['room left']
 
 	io
