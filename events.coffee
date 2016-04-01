@@ -1,7 +1,7 @@
 events = [
 	'err'
-	'login'
-	'logged'
+	'join room'
+	'room joined'
 	'get waiting players'
 	'waiting players'
 	'leave room'
