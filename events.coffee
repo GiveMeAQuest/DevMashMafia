@@ -6,6 +6,8 @@ events = [
 	'waiting players'
 	'leave room'
 	'room left'
+	'create room'
+	'room created'
 ]
 
 events_new = {}
