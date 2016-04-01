@@ -14,15 +14,15 @@ module.exports = (server)->
 			pg.query "SELECT * FROM players WHERE nickname='#{data.nickname}' AND room_id=#{data.room_id};", (result)->
 				if result.rows.length > 0
 					console.log 'Error: such user exists'
-					#socket.emit EVENTS['err'], 'Player with such username has already logged in to this room'
+					socket.emit EVENTS['err'], 'Player with such username has already logged in to this room'
 				else
 					pg.query "INSERT INTO players (nickname, room_id) VALUES ('#{data.nickname}', '#{data.room_id}');", (result)->
 						pg.query "SELECT * FROM players WHERE nickname='#{data.nickname}' AND room_id=#{data.room_id};", (result)->
 							player = result.rows[0]
-							#io.to(data.room_id).emit 'player joined', JSON.stringify player
-							#socket.join data.room_id
+							io.to(data.room_id).emit 'player joined', JSON.stringify player
+							socket.join data.room_id
 
-							#socket.emit EVENTS['room joined'], JSON.stringify player
+							socket.emit EVENTS['room joined'], JSON.stringify player
 
 		socket.on EVENTS['get waiting players'], (roomid)->
 			console.log "get players of room##{roomid}"
