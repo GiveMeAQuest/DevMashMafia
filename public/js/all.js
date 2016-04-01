@@ -369,7 +369,20 @@ webClient.config([
   }
 ]);
 
-webClient.controller('indexCtrl', ['$scope', function($scope) {}]);
+webClient.controller('indexCtrl', [
+  '$scope', '$location', 'socket', function($scope, $location, socket) {
+    return $scope.joinRoom = function() {
+      socket.on('room joined', function(roomid) {
+        $scope.loading = true;
+        return $location.url("/room/" + roomid);
+      });
+      return socket.emit('join room', {
+        nickname: $scope.nickname,
+        room_id: $scope.room_id
+      });
+    };
+  }
+]);
 
 webClient.controller('roomCtrl', [
   '$scope', '$rootScope', '$routeParams', '$q', '$location', 'socket', function($scope, $rootScope, $routeParams, $q, $location, socket) {
@@ -501,31 +514,31 @@ webClient.controller('errorModalCtrl', [
 
 webClient.factory('socket', [
   '$rootScope', '$q', '$http', function($rootScope, $q, $http) {
-    var CONFIG, configReady, socket, socketReady;
+    var EVENTS, eventReady, socket, socketReady;
     socketReady = $q.defer();
-    configReady = $q.defer();
-    CONFIG = null;
+    eventReady = $q.defer();
+    EVENTS = null;
     socket = io.connect();
     socket.on('connect', function() {
       return socketReady.resolve();
     });
-    $http.get('/api/config').then(function(response) {
-      CONFIG = response.data;
-      return configReady.resolve();
+    $http.get('/api/events').then(function(response) {
+      EVENTS = response.data;
+      return eventReady.resolve();
     });
     return {
       on: function(event, cb) {
-        return $q.all([socketReady.promise, configReady.promise]).then(function() {
-          return socket.on(CONFIG[event], cb);
+        return $q.all([socketReady.promise, eventReady.promise]).then(function() {
+          return socket.on(EVENTS[event], cb);
         });
       },
       emit: function(event, data) {
-        return $q.all([socketReady.promise, configReady.promise]).then(function() {
-          return socket.emit(CONFIG[event], data);
+        return $q.all([socketReady.promise, eventReady.promise]).then(function() {
+          return socket.emit(EVENTS[event], data);
         });
       },
       removeAllListeners: function(event) {
-        return socket.removeAllListeners(CONFIG[event]);
+        return socket.removeAllListeners(EVENTS[event]);
       }
     };
   }

@@ -9,9 +9,9 @@ module.exports = (server)->
 	io.on 'connection', (socket)->
 		console.log 'new connection'
 
-		socket.on EVENTS['login'], (data)->
+		socket.on EVENTS['join room'], (data)->
 			if typeof data is 'string' then data = JSON.parse data
-			console.log "login with nickname #{data.nickname} to room ID #{data.room_id}"
+			console.log "join room with nickname #{data.nickname} to room ID #{data.room_id}"
 			pg.query "SELECT * FROM players WHERE nickname='#{data.nickname}' AND room_id=#{data.room_id};", (result)->
 				if result.rows.length > 0
 					console.log 'Error: such user exists'

@@ -1,28 +1,28 @@
 webClient.factory 'socket', ['$rootScope', '$q', '$http', ($rootScope, $q, $http)->
 		socketReady = $q.defer()
-		configReady = $q.defer()
+		eventReady = $q.defer()
 
-		CONFIG = null
+		EVENTS = null
 
 		socket = io.connect()
 
 		socket.on 'connect', ->
 			socketReady.resolve()
 
-		$http.get('/api/config').then (response)->
-			CONFIG = response.data
-			configReady.resolve()
+		$http.get('/api/events').then (response)->
+			EVENTS = response.data
+			eventReady.resolve()
 
 		{
 			on: (event, cb)->
-				$q.all([socketReady.promise, configReady.promise]).then ->
-					socket.on CONFIG[event], cb
+				$q.all([socketReady.promise, eventReady.promise]).then ->
+					socket.on EVENTS[event], cb
 
 			emit: (event, data)->
-				$q.all([socketReady.promise, configReady.promise]).then ->
-					socket.emit CONFIG[event], data
+				$q.all([socketReady.promise, eventReady.promise]).then ->
+					socket.emit EVENTS[event], data
 
 			removeAllListeners: (event)->
-				socket.removeAllListeners CONFIG[event]
+				socket.removeAllListeners EVENTS[event]
 		}
 ]

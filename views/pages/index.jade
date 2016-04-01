@@ -1,1 +1,18 @@
-h1 Mafia 2.0
+.panel.panel-default
+	.panel-heading
+		h1: center Mafia 2.0
+	.panel-body
+		.row
+			.col-xs-8.col-xs-offset-2
+				form
+					.form-group
+						.input-group
+							.input-group-addon Room#
+							input.form-control(type='number', ng-model='room_id')
+					.form-group
+						input.form-control(type='text', ng-model='nickname', placeholder='Nickname')
+					.form-group
+						button.btn.btn-success.form-control(type='submit', ng-click='joinRoom()') Join room
+							
+					.form-group
+						button.btn.btn-info.form-control(style='margin-top: 50px') Create room
