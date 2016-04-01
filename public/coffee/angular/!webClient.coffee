@@ -4,8 +4,8 @@ webClient.config ['$routeProvider', ($routeProvider)->
 	$routeProvider
 
 	.when '/',
-		templateUrl: '/pages/rooms'
-		controller: 'roomsCtrl'
+		templateUrl: '/pages/index'
+		controller: 'indexCtrl'
 
 	.when '/room/:id',
 		templateUrl: (params)-> "/pages/room/#{params.id}",

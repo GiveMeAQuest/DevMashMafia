@@ -356,8 +356,8 @@ webClient = angular.module('webClient', ['ngRoute', 'ui.bootstrap']);
 webClient.config([
   '$routeProvider', function($routeProvider) {
     return $routeProvider.when('/', {
-      templateUrl: '/pages/rooms',
-      controller: 'roomsCtrl'
+      templateUrl: '/pages/index',
+      controller: 'indexCtrl'
     }).when('/room/:id', {
       templateUrl: function(params) {
         return "/pages/room/" + params.id;
@@ -369,7 +369,7 @@ webClient.config([
   }
 ]);
 
-webClient.controller('mainCtrl', ['$scope', '$rootScope', function($scope, $rootScope) {}]);
+webClient.controller('indexCtrl', ['$scope', function($scope) {}]);
 
 webClient.controller('roomCtrl', [
   '$scope', '$rootScope', '$routeParams', '$q', '$location', 'socket', function($scope, $rootScope, $routeParams, $q, $location, socket) {
@@ -379,30 +379,38 @@ webClient.controller('roomCtrl', [
     }
     roomInit = $q.defer();
     playersInit = $q.defer();
+    $scope.loading = true;
+    $q.all([roomInit.promise, playersInit.resolve]).then(function() {
+      return $scope.loading = false;
+    });
     $scope.room = {};
     $scope.room.id = $routeParams.id;
     socket.on('room', function(room) {
+      roomInit.resolve();
       $scope.room = JSON.parse(room);
       return $scope.$apply();
     });
     socket.on('players', function(players) {
+      playersInit.resolve();
       $scope.players = JSON.parse(players);
       return $scope.$apply();
     });
     socket.emit('get room', $scope.room.id);
     socket.emit('get waiting players', $scope.room.id);
     socket.on('room left', function() {
+      socket.removeAllListeners('room left');
       $location.url('/');
       return $scope.$apply();
     });
     return $scope.leaveRoom = function() {
+      $scope.loading = true;
       return socket.emit('leave room', $rootScope.player.id);
     };
   }
 ]);
 
 webClient.controller('roomsCtrl', [
-  '$scope', '$rootScope', '$location', '$uibModal', 'socket', function($scope, $rootScope, $location, $uibModal, socket) {
+  '$scope', '$rootScope', '$location', '$uibModal', '$uibModalStack', 'socket', function($scope, $rootScope, $location, $uibModal, $uibModalStack, socket) {
     $scope.loading = true;
     socket.on('rooms', function(rooms) {
       $scope.rooms = JSON.parse(rooms);
@@ -410,7 +418,23 @@ webClient.controller('roomsCtrl', [
       return $scope.$apply();
     });
     socket.emit('get rooms');
-    return $scope.joinRoom = function(room) {
+    socket.on('err', function(error) {
+      var errModal;
+      socket.removeAllListeners('error');
+      $uibModalStack.dismissAll();
+      $scope.loading = false;
+      return errModal = $uibModal.open({
+        templateUrl: 'errorModal',
+        controller: 'errorModalCtrl',
+        size: 'sm',
+        resolve: {
+          error: function() {
+            return error;
+          }
+        }
+      });
+    });
+    $scope.joinRoom = function(room) {
       var authModal;
       authModal = $uibModal.open({
         templateUrl: 'authModal',
@@ -424,6 +448,7 @@ webClient.controller('roomsCtrl', [
       });
       return (function(room) {
         return authModal.result.then(function(nickname) {
+          $scope.loading = true;
           socket.on('logged', function(player) {
             socket.removeAllListeners('logged');
             if (typeof player === 'string') {
@@ -441,6 +466,20 @@ webClient.controller('roomsCtrl', [
         });
       })(room);
     };
+    return $scope.createRoom = function() {
+      var createRoomModal;
+      createRoomModal = $uibModal.open({
+        templateUrl: 'createRoomModal',
+        controller: 'createRoomModalCtrl',
+        size: 'sm'
+      });
+      return createRoomModal.result.then(function(name) {
+        $scope.loading = true;
+        return socket.emit('create room', {
+          name: name
+        });
+      });
+    };
   }
 ]);
 
@@ -450,6 +489,13 @@ webClient.controller('authModalCtrl', [
     return $scope.ok = function() {
       return $uibModalInstance.close($scope.nickname);
     };
+  }
+]);
+
+webClient.controller('errorModalCtrl', [
+  '$scope', '$uibModalInstance', 'error', function($scope, $uibModalInstance, error) {
+    $scope.error = error;
+    return $scope.ok = $uibModalInstance.close;
   }
 ]);
 

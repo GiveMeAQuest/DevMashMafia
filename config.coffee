@@ -7,3 +7,6 @@ module.exports =
 	'room': '5'
 	'get waiting players': '6'
 	'players': '7'
+	'leave room': '8'
+	'room left': '9'
+	'err': '10'

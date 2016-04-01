@@ -1,8 +1,8 @@
 express = require 'express'
 router = express.Router()
 
-router.get '/rooms', (req, res, next)->
-	res.render 'pages/rooms'
+router.get '/index', (req, res, next)->
+	res.render 'pages/index'
 
 router.get '/room/:id', (req, res, next)->
 	res.render 'pages/room'

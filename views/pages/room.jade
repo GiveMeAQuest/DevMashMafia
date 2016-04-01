@@ -1,7 +1,11 @@
-.panel.panel-info
+span(ng-if='loading')
+	include ../loading
+.panel.panel-info(ng-if='!loading')
 	.panel-heading
 		h3 {{room.name}}
 			.pull-right: button.btn.btn-default(ng-click='leaveRoom()') Leave room
 	table.table.table-bordered.table-responsive.table-hover
+		tr
+			th.success Player list
 		tr(ng-repeat='player in players track by $index')
 			td {{player.nickname}}
