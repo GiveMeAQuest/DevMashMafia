@@ -3,7 +3,7 @@ events = [
 	'join room'
 	'room joined'
 	'get waiting players'
-	'waiting players'
+	'players'
 	'leave room'
 	'room left'
 	'create room'

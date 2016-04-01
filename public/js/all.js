@@ -370,12 +370,22 @@ webClient.config([
 ]);
 
 webClient.controller('indexCtrl', [
-  '$scope', '$location', 'socket', function($scope, $location, socket) {
+  '$scope', '$rootScope', '$location', 'socket', function($scope, $rootScope, $location, socket) {
+    socket.on('err', function(error) {
+      $scope.loading = false;
+      $scope.error = error;
+      return $scope.$apply();
+    });
     return $scope.joinRoom = function() {
-      socket.on('room joined', function(roomid) {
-        $scope.loading = true;
-        return $location.url("/room/" + roomid);
+      socket.on('room joined', function(player) {
+        if (typeof player === 'string') {
+          player = JSON.parse(player);
+        }
+        $rootScope.player = player;
+        $location.url("/room/" + player.room_id);
+        return $scope.$apply();
       });
+      $scope.loading = true;
       return socket.emit('join room', {
         nickname: $scope.nickname,
         room_id: $scope.room_id
@@ -385,31 +395,18 @@ webClient.controller('indexCtrl', [
 ]);
 
 webClient.controller('roomCtrl', [
-  '$scope', '$rootScope', '$routeParams', '$q', '$location', 'socket', function($scope, $rootScope, $routeParams, $q, $location, socket) {
-    var playersInit, roomInit;
+  '$scope', '$rootScope', '$routeParams', '$location', 'socket', function($scope, $rootScope, $routeParams, $location, socket) {
     if ($rootScope.player == null) {
       $location.url('/');
     }
-    roomInit = $q.defer();
-    playersInit = $q.defer();
     $scope.loading = true;
-    $q.all([roomInit.promise, playersInit.resolve]).then(function() {
-      return $scope.loading = false;
-    });
-    $scope.room = {};
-    $scope.room.id = $routeParams.id;
-    socket.on('room', function(room) {
-      roomInit.resolve();
-      $scope.room = JSON.parse(room);
-      return $scope.$apply();
-    });
+    $scope.roomid = $routeParams.id;
     socket.on('players', function(players) {
-      playersInit.resolve();
+      $scope.loading = false;
       $scope.players = JSON.parse(players);
       return $scope.$apply();
     });
-    socket.emit('get room', $scope.room.id);
-    socket.emit('get waiting players', $scope.room.id);
+    socket.emit('get waiting players', $scope.roomid);
     socket.on('room left', function() {
       socket.removeAllListeners('room left');
       $location.url('/');

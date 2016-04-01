@@ -2,17 +2,20 @@
 	.panel-heading
 		h1: center Mafia 2.0
 	.panel-body
-		.row
+		span(ng-if='loading')
+			include ../loading
+		.row(ng-if='!loading')
 			.col-xs-8.col-xs-offset-2
 				form
 					.form-group
 						.input-group
 							.input-group-addon Room#
-							input.form-control(type='number', ng-model='room_id')
+							input.form-control(type='number', ng-model='$parent.room_id')
 					.form-group
-						input.form-control(type='text', ng-model='nickname', placeholder='Nickname')
+						input.form-control(type='text', ng-model='$parent.nickname', placeholder='Nickname')
 					.form-group
 						button.btn.btn-success.form-control(type='submit', ng-click='joinRoom()') Join room
+					b.text-danger(ng-show='error') {{error}}
 							
 					.form-group
 						button.btn.btn-info.form-control(style='margin-top: 50px') Create room
