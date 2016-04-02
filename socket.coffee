@@ -21,7 +21,7 @@ module.exports = (server)->
 							console.log 'Error: such user exists'
 							socket.emit EVENTS['err'], 'Player with such username has already logged in to this room'
 						else
-							pg.query "INSERT INTO players (nickname, room_id, socket_id) VALUES ('#{data.nickname}', '#{data.room_id}', '#{socket.id}') RETURNING *;", (result)->
+							pg.query "INSERT INTO players (nickname, room_id) VALUES ('#{data.nickname}', '#{data.room_id}') RETURNING *;", (result)->
 								player = result.rows[0]
 								io.to(data.room_id).emit 'player joined', JSON.stringify player
 								socket.join data.room_id
