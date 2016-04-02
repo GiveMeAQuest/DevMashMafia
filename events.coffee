@@ -8,6 +8,10 @@ events = [
 	'room left'
 	'create room'
 	'room created'
+	'player joined'
+	'get room'
+	'room'
+	'player left'
 ]
 
 events_new = {}

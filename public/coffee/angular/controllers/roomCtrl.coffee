@@ -1,26 +1,58 @@
-webClient.controller 'roomCtrl', ['$scope', '$rootScope', '$routeParams', '$location', 'socket', ($scope, $rootScope, $routeParams, $location, socket)->
+webClient.controller 'roomCtrl', ['$scope', '$rootScope', '$routeParams', '$location', '$q', 'socket', ($scope, $rootScope, $routeParams, $location, $q, socket)->
+
+	$scope.$on '$destroy', ->
+		socket.removeAllListeners 'player joined'
+		socket.removeAllListeners 'player left'
 
 	if !$rootScope.player?
 		$location.url '/'
 
 	$scope.loading = true
 
-	$scope.roomid = $routeParams.id
+	playersInit = $q.defer()
+	roomInit = $q.defer()
+
+	$scope.room =
+		id: $routeParams.id
 
 	socket.on 'players', (players)->
-		$scope.loading = false
+		socket.removeAllListeners 'players'
+		playersInit.resolve()
 		$scope.players = JSON.parse players
 		$scope.$apply()
 
-	socket.emit 'get waiting players', $scope.roomid
+	socket.on 'room', (room)->
+		socket.removeAllListeners 'room'
+		room = JSON.parse room
+		roomInit.resolve()
+		$scope.room = room
+		$scope.$apply()
+
+	$q.all([playersInit.promise, roomInit.promise]).then ->
+		$scope.loading = false
+
+	socket.emit 'get waiting players', $scope.room.id
+	socket.emit 'get room', $scope.room.id
 
 	socket.on 'room left', ->
-			socket.removeAllListeners 'room left'
-			$location.url '/'
-			$scope.$apply()
+		socket.removeAllListeners 'room left'
+		$location.url '/'
+		$scope.$apply()
 
 	$scope.leaveRoom = ->
 		$scope.loading = true
 		socket.emit 'leave room', $rootScope.player.id
+
+	socket.on 'player joined', (player)->
+		player = JSON.parse player
+		$scope.players.push player
+		$scope.$apply()
+
+	socket.on 'player left', (player_id)->
+		for player, i in $scope.players
+			if player.id is player_id
+				$scope.players.splice i, 1
+				$scope.$apply()
+				break
 
 ]

@@ -2,7 +2,7 @@ span(ng-if='loading')
 	include ../loading
 .panel.panel-info(ng-if='!loading')
 	.panel-heading
-		h3 Room ID {{roomid}}
+		h3 Room ID {{room.id}}
 			.pull-right: button.btn.btn-default(ng-click='leaveRoom()') Leave room
 	table.table.table-bordered.table-responsive.table-hover
 		tr

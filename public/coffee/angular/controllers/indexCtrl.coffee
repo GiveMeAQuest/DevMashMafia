@@ -1,18 +1,22 @@
 webClient.controller 'indexCtrl', ['$scope', '$rootScope', '$location', 'socket', ($scope, $rootScope, $location, socket)->
 
+	$scope.$on '$destroy', ->
+		socket.removeAllListeners 'err'
+
 	socket.on 'err', (error)->
 		$scope.loading = false
 		$scope.error = error
 		$scope.$apply()
 
-	$scope.joinRoom = ->
-		socket.on 'room joined', (player)->
-			socket.removeAllListeners 'room joined'
-			if typeof player is 'string' then player = JSON.parse player
-			$rootScope.player = player
-			$location.url "/room/#{player.room_id}"
-			$scope.$apply()
+	socket.on 'room joined', (player)->
+		socket.removeAllListeners 'room joined'
+		if typeof player is 'string' then player = JSON.parse player
+		$rootScope.player = player
+		$location.url "/room/#{player.room_id}"
+		$scope.$apply()
 
+	$scope.joinRoom = ->
+		
 		$scope.loading = true
 
 		socket.emit 'join room',

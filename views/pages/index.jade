@@ -6,15 +6,15 @@
 			include ../loading
 		.row(ng-if='!loading')
 			.col-xs-8.col-xs-offset-2
-				form
+				form(name='joinRoomForm', novalidate)
 					.form-group
 						.input-group
 							.input-group-addon Room ID
-							input.form-control(type='number', min=1, ng-model='$parent.room_id')
+							input.form-control(type='number', min=1, ng-model='$parent.room_id', required)
 					.form-group
-						input.form-control(type='text', ng-model='$parent.nickname', placeholder='Nickname')
+						input.form-control(type='text', ng-model='$parent.nickname', placeholder='Nickname', required)
 					.form-group
-						button.btn.btn-success.form-control(type='submit', ng-click='joinRoom()') Join room
+						button.btn.btn-success.form-control(type='submit', ng-click='joinRoom()', ng-disabled='joinRoomForm.$invalid') Join room
 					b.text-danger(ng-show='error') {{error}}
 							
 					.form-group
