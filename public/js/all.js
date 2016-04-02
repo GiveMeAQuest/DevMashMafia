@@ -396,7 +396,10 @@ webClient.controller('createRoomCtrl', [
     });
     return $scope.createRoom = function() {
       $scope.loading = true;
-      return socket.emit('create room');
+      return socket.emit('create room', {
+        players: $scope.formData.players,
+        customRoles: $scope.formData.customRoles
+      });
     };
   }
 ]);

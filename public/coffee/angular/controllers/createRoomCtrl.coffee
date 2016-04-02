@@ -22,6 +22,8 @@ webClient.controller 'createRoomCtrl', ['$scope', '$rootScope', '$location', 'so
 
 	$scope.createRoom = ->
 		$scope.loading = true
-		socket.emit 'create room'
+		socket.emit 'create room',
+			players: $scope.formData.players
+			customRoles: $scope.formData.customRoles
 
 ]
