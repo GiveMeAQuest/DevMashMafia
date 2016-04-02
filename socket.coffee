@@ -1,7 +1,25 @@
 EVENTS = require './events'
 pg = require './pg'
 Player = require './classes/Player'
-Phase = require './classes/Phase'
+
+funcs =
+	'leave room': (socket, playerid)->
+		console.log "player##{playerid} is leaving his room"
+		pg.query "DELETE FROM players WHERE id=#{playerid} RETURNING room_id;", (result)->
+			room_id = result.rows[0].room_id
+
+			socket.emit EVENTS['room left']
+
+			pg.query "DELETE FROM rooms WHERE id=#{room_id} AND (SELECT COUNT(*) AS count FROM players WHERE room_id=#{room_id})=0;"
+
+PLAYERS = []
+
+findPlayer = (socket_id)->
+	for i of PLAYERS
+		player = PLAYERS[i]
+		if player.socket_id is socket_id
+			return i
+	-1
 
 module.exports = (server)->
 	io = require('socket.io').listen server
@@ -23,6 +41,8 @@ module.exports = (server)->
 						else
 							pg.query "INSERT INTO players (nickname, room_id) VALUES ('#{data.nickname}', '#{data.room_id}') RETURNING *;", (result)->
 								player = result.rows[0]
+
+								PLAYERS.push new Player player.id, socket.id
 								io.to(data.room_id).emit 'player joined', JSON.stringify player
 								socket.join data.room_id
 
@@ -34,13 +54,7 @@ module.exports = (server)->
 				socket.emit EVENTS['players'], JSON.stringify result.rows
 
 		socket.on EVENTS['leave room'], (playerid)->
-			console.log "player##{playerid} is leaving his room"
-			pg.query "DELETE FROM players WHERE id=#{playerid} RETURNING room_id;", (result)->
-				room_id = result.rows[0].room_id
-
-				socket.emit EVENTS['room left']
-
-				pg.query "DELETE FROM rooms WHERE id=#{room_id} AND (SELECT COUNT(*) AS count FROM players WHERE room_id=#{room_id})=0;"
+			funcs['leave room'] socket, playerid
 
 
 		socket.on EVENTS['create room'], (params)->
@@ -53,5 +67,14 @@ module.exports = (server)->
 				pg.query "UPDATE room_params SET room_id=#{room_id} WHERE id=#{params_id};", ->
 					console.log "created room##{room_id}"
 					socket.emit EVENTS['room created'], room_id
+
+		socket.on 'disconnect', ->
+			ind = findPlayer socket.id
+			if ind isnt -1
+				player = PLAYERS[ind]
+				console.log "player##{player.id} disconnected"
+				funcs['leave room'] socket, player.id
+			else
+				console.log 'socket disconnected'
 
 	io

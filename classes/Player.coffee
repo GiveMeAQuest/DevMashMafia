@@ -1,6 +1,6 @@
-class Person
+class Player
 
-	constructor: (@role)->
-		console.log "new #{@role} created"
+	constructor: (@id, @socket_id)->
+		console.log "new player ID #{@id} created"
 
-	status: Number
+module.exports = Player
