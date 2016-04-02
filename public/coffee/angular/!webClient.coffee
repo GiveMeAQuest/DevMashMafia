@@ -7,6 +7,10 @@ webClient.config ['$routeProvider', ($routeProvider)->
 		templateUrl: '/pages/index'
 		controller: 'indexCtrl'
 
+	.when '/room/create',
+		templateUrl: '/pages/createRoom'
+		controller: 'createRoomCtrl'
+
 	.when '/room/:id',
 		templateUrl: (params)-> "/pages/room/#{params.id}",
 		controller: 'roomCtrl'

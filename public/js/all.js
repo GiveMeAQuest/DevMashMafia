@@ -358,6 +358,9 @@ webClient.config([
     return $routeProvider.when('/', {
       templateUrl: '/pages/index',
       controller: 'indexCtrl'
+    }).when('/room/create', {
+      templateUrl: '/pages/createRoom',
+      controller: 'createRoomCtrl'
     }).when('/room/:id', {
       templateUrl: function(params) {
         return "/pages/room/" + params.id;
@@ -369,6 +372,35 @@ webClient.config([
   }
 ]);
 
+webClient.controller('createRoomCtrl', [
+  '$scope', '$rootScope', '$location', 'socket', function($scope, $rootScope, $location, socket) {
+    $scope.formData = {};
+    $scope.formData.players = 5;
+    $scope.back = function() {
+      $scope.loading = true;
+      return $location.url('/');
+    };
+    socket.on('room joined', function(player) {
+      socket.removeAllListeners('room joined');
+      player = JSON.parse(player);
+      $rootScope.player = player;
+      $location.url("/room/" + player.room_id);
+      return $scope.$apply();
+    });
+    socket.on('room created', function(id) {
+      socket.removeAllListeners('room created');
+      return socket.emit('join room', {
+        nickname: $scope.formData.nickname,
+        room_id: id
+      });
+    });
+    return $scope.createRoom = function() {
+      $scope.loading = true;
+      return socket.emit('create room');
+    };
+  }
+]);
+
 webClient.controller('indexCtrl', [
   '$scope', '$rootScope', '$location', 'socket', function($scope, $rootScope, $location, socket) {
     socket.on('err', function(error) {
@@ -376,8 +408,9 @@ webClient.controller('indexCtrl', [
       $scope.error = error;
       return $scope.$apply();
     });
-    return $scope.joinRoom = function() {
+    $scope.joinRoom = function() {
       socket.on('room joined', function(player) {
+        socket.removeAllListeners('room joined');
         if (typeof player === 'string') {
           player = JSON.parse(player);
         }
@@ -390,6 +423,10 @@ webClient.controller('indexCtrl', [
         nickname: $scope.nickname,
         room_id: $scope.room_id
       });
+    };
+    return $scope.createRoom = function() {
+      $scope.loading = true;
+      return $location.url('/room/create');
     };
   }
 ]);

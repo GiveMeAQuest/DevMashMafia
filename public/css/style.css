@@ -1,8 +1,22 @@
 body {
-	padding: 50px;
-	font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+	margin-top: 50px;
 }
 
 #roomsTable td:hover {
 	cursor: pointer;
+}
+
+#createRoomBtn {
+	margin-top: 50px;
+}
+
+.padding-top-5 {
+	padding-top: 5px;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+	/* display: none; <- Crashes Chrome on hover */
+	-webkit-appearance: none;
+	margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
 }

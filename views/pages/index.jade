@@ -9,8 +9,8 @@
 				form
 					.form-group
 						.input-group
-							.input-group-addon Room#
-							input.form-control(type='number', ng-model='$parent.room_id')
+							.input-group-addon Room ID
+							input.form-control(type='number', min=1, ng-model='$parent.room_id')
 					.form-group
 						input.form-control(type='text', ng-model='$parent.nickname', placeholder='Nickname')
 					.form-group
@@ -18,4 +18,4 @@
 					b.text-danger(ng-show='error') {{error}}
 							
 					.form-group
-						button.btn.btn-info.form-control(style='margin-top: 50px') Create room
+						button.btn.btn-info.form-control#createRoomBtn(ng-click='createRoom()') Create room

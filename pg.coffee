@@ -9,5 +9,5 @@ module.exports =
 			if err then throw err
 			client.query query, (err, result)->
 				if err then throw err
-				cb result
+				cb? result
 				done()
