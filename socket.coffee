@@ -18,7 +18,9 @@ pg.query "DELETE FROM players; DELETE FROM ROOMS;", ->
 
 funcs =
 
-	'leave room': (socket, player_id)->
+	'leave room': (socket)->
+		i = findPlayer socket.id
+		player_id = PLAYERS[i].id
 		pg.query "DELETE FROM players WHERE id=#{player_id} RETURNING room_id, id AS player_id;", (result)->
 			socket.emit EVENTS['room left']
 
@@ -34,7 +36,20 @@ funcs =
 				pg.query "DELETE FROM rooms WHERE id=#{room_id} AND (SELECT COUNT(*) AS count FROM players WHERE room_id=#{room_id})=0;"
 
 	'join room': (socket, data)->
-		if typeof data is 'string' then data = JSON.parse data
+
+		if typeof data is 'string'
+			try
+				data = JSON.parse data
+			catch e
+				console.log 'join room: invalid data!'
+				socket.emit EVENTS['err'], 'Invalid data!'
+				return
+
+		if isNaN data.room_id
+			console.log 'join room: invalid data!'
+			socket.emit EVENTS['err'], 'Invalid data!'
+			return
+			
 		console.log "join room with nickname #{data.nickname} to room ID #{data.room_id}"
 		pg.query "SELECT * FROM rooms WHERE id=#{data.room_id};", (result)->
 			if result.rows.length is 0
