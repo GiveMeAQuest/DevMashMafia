@@ -23,8 +23,8 @@ webClient.controller 'roomCtrl', ['$scope', '$rootScope', '$routeParams', '$loca
 		$scope.$apply()
 
 	socket.on 'room', (room)->
+		if typeof room is 'string' then room = JSON.parse room
 		socket.removeAllListeners 'room'
-		room = JSON.parse room
 		roomInit.resolve()
 		$scope.room = room
 		$scope.$apply()

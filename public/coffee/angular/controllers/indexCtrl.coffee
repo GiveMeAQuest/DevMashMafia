@@ -15,8 +15,11 @@ webClient.controller 'indexCtrl', ['$scope', '$rootScope', '$location', 'socket'
 		$location.url "/room/#{player.room_id}"
 		$scope.$apply()
 
-	$scope.joinRoom = ->
-		
+	$scope.joinRoom = (valid)->
+		if not valid
+			$scope.error = 'Some fields are incorrectly filled!'
+			return
+			
 		$scope.loading = true
 
 		socket.emit 'join room',

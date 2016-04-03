@@ -423,7 +423,11 @@ webClient.controller('indexCtrl', [
       $location.url("/room/" + player.room_id);
       return $scope.$apply();
     });
-    $scope.joinRoom = function() {
+    $scope.joinRoom = function(valid) {
+      if (!valid) {
+        $scope.error = 'Some fields are incorrectly filled!';
+        return;
+      }
       $scope.loading = true;
       return socket.emit('join room', {
         nickname: $scope.nickname,
@@ -461,8 +465,10 @@ webClient.controller('roomCtrl', [
       return $scope.$apply();
     });
     socket.on('room', function(room) {
+      if (typeof room === 'string') {
+        room = JSON.parse(room);
+      }
       socket.removeAllListeners('room');
-      room = JSON.parse(room);
       roomInit.resolve();
       $scope.room = room;
       return $scope.$apply();

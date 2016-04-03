@@ -14,7 +14,7 @@
 					.form-group
 						input.form-control(type='text', ng-model='$parent.nickname', placeholder='Nickname', required)
 					.form-group
-						button.btn.btn-success.form-control(type='submit', ng-click='joinRoom()', ng-disabled='joinRoomForm.$invalid') Join room
+						button.btn.btn-success.form-control(type='submit', ng-click='joinRoom(joinRoomForm.$valid)') Join room
 					b.text-danger(ng-show='error') {{error}}
 							
 					.form-group

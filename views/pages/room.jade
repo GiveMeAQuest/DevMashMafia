@@ -2,7 +2,9 @@ span(ng-if='loading')
 	include ../loading
 .panel.panel-info(ng-if='!loading')
 	.panel-heading
-		h3 Room ID {{room.id}}
+		h3 Room ID
+			b  {{room.id}}
+			span(ng-class='{"text-danger": players.length<room.players, "text-success": players.length==room.players}')  ({{players.length}}/{{room.players}})
 			.pull-right: button.btn.btn-default(ng-click='leaveRoom()') Leave room
 	table.table.table-bordered.table-responsive.table-hover
 		tr
