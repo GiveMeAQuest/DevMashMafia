@@ -13,15 +13,18 @@ findPlayer = (socket_id)->
 			return i
 	-1
 
-pg.query "DELETE FROM players; DELETE FROM ROOMS;", ->
+pg.query "DELETE FROM players; DELETE FROM rooms;", ->
 	console.log 'players and rooms erased'
 
 funcs =
 
 	'leave room': (socket)->
 		i = findPlayer socket.id
+		if i is -1 then return
 		player_id = PLAYERS[i].id
 		pg.query "DELETE FROM players WHERE id=#{player_id} RETURNING room_id, id AS player_id;", (result)->
+			PLAYERS.splice i, 1
+
 			socket.emit EVENTS['room left']
 
 			if result.rows.length > 0
@@ -36,16 +39,18 @@ funcs =
 				pg.query "DELETE FROM rooms WHERE id=#{room_id} AND (SELECT COUNT(*) AS count FROM players WHERE room_id=#{room_id})=0;"
 
 	'join room': (socket, data)->
-
 		if typeof data is 'string'
 			try
 				data = JSON.parse data
-				if isNaN data.room_id
-					throw new Error()
 			catch e
 				console.log 'join room: invalid data!'
 				socket.emit EVENTS['err'], 'Invalid data!'
 				return
+
+		if isNaN data.room_id or !data.nickname?
+			console.log 'join room: invalid data!'
+			socket.emit EVENTS['err'], 'Invalid data!'
+			return
 
 		console.log "join room with nickname #{data.nickname} to room ID #{data.room_id}"
 		pg.query "SELECT * FROM rooms WHERE id=#{data.room_id};", (result)->
@@ -55,14 +60,17 @@ funcs =
 			else
 				pg.query "SELECT * FROM players WHERE nickname='#{data.nickname}' AND room_id=#{data.room_id};", (result)->
 					if result.rows.length > 0
-						console.log 'Error: such user exists'
-						socket.emit EVENTS['err'], 'Player with such username has already logged in to this room'
+						console.log 'Error: user exists'
+						socket.emit EVENTS['err'], 'Player with same username has already joined this room'
 					else
 						pg.query "INSERT INTO players (nickname, room_id) VALUES ('#{data.nickname}', #{data.room_id}) RETURNING *;", (result)->
 
 							player = result.rows[0]
 
-							PLAYERS.push new Player player.id, socket.id
+							PLAYERS.push new Player
+								id: player.id
+								socket_id: socket.id
+								room_id: data.room_id
 
 							pg.query "UPDATE rooms SET owner_id=#{player.id} WHERE id=#{data.room_id} AND (SELECT COUNT(*) FROM players WHERE room_id=#{data.room_id})=1;", ->
 
@@ -72,21 +80,31 @@ funcs =
 
 								socket.emit EVENTS['room joined'], JSON.stringify player
 
-	'get waiting players': (socket, room_id)->
-		console.log "get players of room ID #{room_id}"
-		pg.query "SELECT id, nickname FROM players WHERE players.room_id='#{room_id}';", (result)->
+	'get waiting players': (socket)->
+		i = findPlayer socket.id
+		if i is -1
+			console.log 'get waiting players: user is not in room'
+			socket.emit EVENTS['err'], 'You are not in room'
+			return
+		player = PLAYERS[i]
+		console.log player
+		console.log "get players of room ID #{player.room_id}"
+		pg.query "SELECT id, nickname FROM players WHERE players.room_id='#{player.room_id}';", (result)->
 			socket.emit EVENTS['players'], JSON.stringify result.rows
 
 	'create room': (socket, params)->
 		if typeof params is 'string'
 			try
 				params = JSON.parse params
-				if isNaN params.players
-					throw new Error()
 			catch e
 				console.log 'create room: invalid data!'
 				socket.emit EVENTS['err'], 'Invalid data!'
 				return
+
+		if isNaN params.players
+			console.log 'create room: invalid data!'
+			socket.emit EVENTS['err'], 'Invalid data!'
+			return
 		
 		console.log "create room"
 		roomQuery = "INSERT INTO rooms (params_id) VALUES ((select params_id from params)) RETURNING id AS room_id"
@@ -102,7 +120,13 @@ funcs =
 				socket.emit EVENTS['room created'], room_id
 
 	'get room': (socket, room_id)->
+		if isNaN room_id
+			console.log "get room: invalid data!"
+			socket.emit EVENTS['err'], "Invalid data!"
+			return
+
 		console.log "get room ID #{room_id} info"
+
 		pg.query "SELECT rooms.id, rooms.owner_id, phases.name AS phase, room_params.players FROM rooms, phases, room_params WHERE rooms.id=#{room_id} AND phases.id=rooms.phase_id AND room_params.room_id=#{room_id};", (result)->
 			room = result.rows[0]
 			socket.emit EVENTS['room'], JSON.stringify room
