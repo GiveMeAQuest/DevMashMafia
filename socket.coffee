@@ -58,16 +58,19 @@ funcs =
 						console.log 'Error: such user exists'
 						socket.emit EVENTS['err'], 'Player with such username has already logged in to this room'
 					else
-						pg.query "INSERT INTO players (nickname, room_id) VALUES ('#{data.nickname}', '#{data.room_id}') RETURNING *;", (result)->
+						pg.query "INSERT INTO players (nickname, room_id) VALUES ('#{data.nickname}', #{data.room_id}) RETURNING *;", (result)->
+
 							player = result.rows[0]
 
 							PLAYERS.push new Player player.id, socket.id
 
-							io.to(data.room_id).emit EVENTS['player joined'], JSON.stringify player
+							pg.query "UPDATE rooms SET owner_id=#{player.id} WHERE id=#{data.room_id} AND (SELECT COUNT(*) FROM players WHERE room_id=#{data.room_id})=1;", ->
 
-							socket.join data.room_id
+								io.to(data.room_id).emit EVENTS['player joined'], JSON.stringify player
 
-							socket.emit EVENTS['room joined'], JSON.stringify player
+								socket.join data.room_id
+
+								socket.emit EVENTS['room joined'], JSON.stringify player
 
 	'get waiting players': (socket, room_id)->
 		console.log "get players of room ID #{room_id}"
@@ -85,11 +88,11 @@ funcs =
 				socket.emit EVENTS['err'], 'Invalid data!'
 				return
 		
-		console.log 'create room'
-		roomQuery = "INSERT INTO rooms (params_id) VALUES ((select params_id from params)"
+		console.log "create room"
+		roomQuery = "INSERT INTO rooms (params_id) VALUES ((select params_id from params)) RETURNING id AS room_id"
 		paramsQuery = "INSERT INTO room_params (players) VALUES (#{params.players}) RETURNING id AS params_id"
 
-		pg.query "WITH RECURSIVE room AS (#{roomQuery}) RETURNING id AS room_id), params AS (#{paramsQuery}) SELECT * FROM room, params;", (result)->
+		pg.query "WITH RECURSIVE room AS (#{roomQuery}), params AS (#{paramsQuery}) SELECT * FROM room, params;", (result)->
 
 			room_id = result.rows[0].room_id
 			params_id = result.rows[0].params_id
@@ -99,7 +102,8 @@ funcs =
 				socket.emit EVENTS['room created'], room_id
 
 	'get room': (socket, room_id)->
-		pg.query "SELECT rooms.id, phases.name AS phase, room_params.players FROM rooms, phases, room_params WHERE rooms.id=#{room_id} AND phases.id=rooms.phase_id AND room_params.room_id=#{room_id};", (result)->
+		console.log "get room ID #{room_id} info"
+		pg.query "SELECT rooms.id, rooms.owner_id, phases.name AS phase, room_params.players FROM rooms, phases, room_params WHERE rooms.id=#{room_id} AND phases.id=rooms.phase_id AND room_params.room_id=#{room_id};", (result)->
 			room = result.rows[0]
 			socket.emit EVENTS['room'], JSON.stringify room
 
@@ -115,7 +119,7 @@ funcs =
 module.exports = (server)->
 	io = require('socket.io').listen server
 	io.on 'connection', (socket)->
-		console.log 'new connection'
+		console.log 'new socket connection'
 
 		socket.on EVENTS['join room'], (data)->
 			funcs['join room'] socket, data
