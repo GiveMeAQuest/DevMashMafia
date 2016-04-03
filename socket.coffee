@@ -40,16 +40,13 @@ funcs =
 		if typeof data is 'string'
 			try
 				data = JSON.parse data
+				if isNaN data.room_id
+					throw new Error()
 			catch e
 				console.log 'join room: invalid data!'
 				socket.emit EVENTS['err'], 'Invalid data!'
 				return
 
-		if isNaN data.room_id
-			console.log 'join room: invalid data!'
-			socket.emit EVENTS['err'], 'Invalid data!'
-			return
-			
 		console.log "join room with nickname #{data.nickname} to room ID #{data.room_id}"
 		pg.query "SELECT * FROM rooms WHERE id=#{data.room_id};", (result)->
 			if result.rows.length is 0
@@ -78,6 +75,16 @@ funcs =
 			socket.emit EVENTS['players'], JSON.stringify result.rows
 
 	'create room': (socket, params)->
+		if typeof params is 'string'
+			try
+				params = JSON.parse params
+				if isNaN params.players
+					throw new Error()
+			catch e
+				console.log 'create room: invalid data!'
+				socket.emit EVENTS['err'], 'Invalid data!'
+				return
+		
 		console.log 'create room'
 		roomQuery = "INSERT INTO rooms (params_id) VALUES ((select params_id from params)"
 		paramsQuery = "INSERT INTO room_params (players) VALUES (#{params.players}) RETURNING id AS params_id"
