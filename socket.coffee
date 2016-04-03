@@ -72,7 +72,7 @@ funcs =
 								socket_id: socket.id
 								room_id: data.room_id
 
-							pg.query "UPDATE rooms SET owner_id=#{player.id} WHERE id=#{data.room_id} AND (SELECT COUNT(*) FROM players WHERE room_id=#{data.room_id})=1;", ->
+							pg.query "UPDATE rooms SET host_id=#{player.id} WHERE id=#{data.room_id} AND (SELECT COUNT(*) FROM players WHERE room_id=#{data.room_id})=1;", ->
 
 								io.to(data.room_id).emit EVENTS['player joined'], JSON.stringify player
 
@@ -127,7 +127,7 @@ funcs =
 
 		console.log "get room ID #{room_id} info"
 
-		pg.query "SELECT rooms.id, rooms.owner_id, phases.name AS phase, room_params.players FROM rooms, phases, room_params WHERE rooms.id=#{room_id} AND phases.id=rooms.phase_id AND room_params.room_id=#{room_id};", (result)->
+		pg.query "SELECT rooms.id, rooms.host_id, phases.name AS phase, room_params.players FROM rooms, phases, room_params WHERE rooms.id=#{room_id} AND phases.id=rooms.phase_id AND room_params.room_id=#{room_id};", (result)->
 			room = result.rows[0]
 			socket.emit EVENTS['room'], JSON.stringify room
 

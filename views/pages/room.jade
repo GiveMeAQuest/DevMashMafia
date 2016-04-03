@@ -9,5 +9,5 @@ span(ng-if='loading')
 			th.success Players list
 		tr(ng-repeat='player in players track by $index')
 			td
-				b(ng-if='player.id==room.owner_id') {{player.nickname}}
-				span(ng-if='player.id!=room.owner_id') {{player.nickname}}
+				b(ng-if='player.id==room.host_id') {{player.nickname}}
+				span(ng-if='player.id!=room.host_id') {{player.nickname}}
