@@ -1,7 +1,8 @@
+#API сокетов
 ##Условные обозначения
-__{a, b, c, ...}__ - JSON-объект с полями "a", "b", "c", ...
+`{a, b, c, ...}` - JSON-объект с полями "a", "b", "c", ...
 
-__[a]__ - массив JSON-объектов "а"
+`[a]` - массив JSON-объектов "а"
 
 Все названия полей, а также строковые значения надо заключать в двойные кавычки!
 
@@ -10,78 +11,78 @@ __[a]__ - массив JSON-объектов "а"
 ###События, отправляемые пользователем серверу
 
 ####Вход в комнату
-- _event_: "join room"
-- _data_: {nickname, room\_id}
- - _nickname_: ник игрока (строка)
- - _room\_id_: ID комнаты (число)
+- `event`: "join room"
+- `data`: {nickname, room\_id}
+  - `nickname`: ник игрока (строка)
+  - `room_id`: ID комнаты (число)
 
 __Ответ сервера__
-- _event_: "room joined"
-- _data_: room_id
- - _room\_id_: ID комнаты, в которую зашёл игрок (число)
+- `event`: "room joined"
+- `data`: room_id
+  - `room_id`: ID комнаты, в которую зашёл игрок (число)
  
 ####Создание комнаты
-- _event_: "create room"
-- _data_: {players}
- - _players_: Необходимое кол-во игроков в комнате (число)
+- `event`: "create room"
+- `data`: {players}
+  - `players`: Необходимое кол-во игроков в комнате (число)
  
 __Ответ сервера__
-- _event_: "room created"
-- _data_: room\_id
- - _room_id_: ID созданной комнаты (число)
+- `event`: "room created"
+- `data`: room_id
+  - `room_id`: ID созданной комнаты (число)
  
 ####Получение списка игроков в комнате (до начала игры)
-- _event_: "get waiting players"
-- _data_: -
+- `event`: "get waiting players"
+- `data`: -
 
 __Ответ сервера__
-- _event_: "players"
-- _data_: [player]
- - _player_: {id, nickname}
-  - _id_: ID игрока (число)
-  - _nickname_: Ник игрока (строка)
-  
+- `event`: "players"
+- `data`: [player]
+  - `player`: {id, nickname}
+    1. `id`: ID игрока (число)
+    2. `nickname`: Ник игрока (строка)
+
 ####Выход из комнаты
-- _event_: "leave room"
-- _data_: -
+- `event`: "leave room"
+- `data`: -
 
 __Ответ сервера__
-- _event_: "room left"
-- _data_: -
+- `event`: "room left"
+- `data`: -
 
 ####Получение данных о комнате
-- _event_: "get room"
-- _data_: room\_id
- - _room\_id_: ID нужной комнаты (число)
+- `event`: "get room"
+- `data`: room\_id
+  - `room_id`: ID нужной комнаты (число)
  
 __Ответ сервера__
-- _event_: "room"
-- _data_: {id, host_id, phase}
- - _id_: ID комнаты (число)
- - _host\_id_: ID хоста комнаты (число)
- - _phase_: Название текущей фазы комнаты (строка)
+- `event`: "room"
+- `data`: {id, host_id, phase}
+  - `id`: ID комнаты (число)
+  - `host_id`: ID хоста комнаты (число)
+  - `phase`: Название текущей фазы комнаты (строка)
 
 
 ###События, отправляемые сервером пользователю
 
 ####Любая ошибка
-- _event_: "err"
-- _data_: error
- - _error_: Текст ошибки (строка)
+- `event`: "err"
+- `data`: error
+  - `error`: Текст ошибки (строка)
  
 ####В комнату игрока зашёл другой игрок
-- _event_: "player joined"
-- _data_: id
- - _id_: ID зашедшего игрока (число)
+- `event`: "player joined"
+- `data`: id
+  - `id`: ID зашедшего игрока (число)
 
 
 ####Из комнаты игрока вышел другой игрок
-- _event_: "player left"
-- _data_: id
- - _id_: ID вышедшего игрока (число)
+- `event`: "player left"
+- `data`: id
+  - `id`: ID вышедшего игрока (число)
 
 
 ####Из комнаты игрока вышел хост и сервер назначил нового хоста
-- _event_: "host changed"
-- _data_: host\_id
- - _host\_id_: ID игрока, ставшего хостом (число)
+- `event`: "host changed"
+- `data`: host\_id
+  - `host_id`: ID игрока, ставшего хостом (число)
