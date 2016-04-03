@@ -12,6 +12,7 @@ events = [
 	'player left'
 	'get room'
 	'room'
+	'host changed'
 ]
 
 events_new = {}
