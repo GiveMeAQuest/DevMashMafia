@@ -36,7 +36,17 @@ funcs =
 				io.to(room_id).emit EVENTS['player left'], player_id
 				console.log "player from room ID #{room_id} left"
 
-				pg.query "DELETE FROM rooms WHERE id=#{room_id} AND (SELECT COUNT(*) AS count FROM players WHERE room_id=#{room_id})=0;"
+				pg.query "SELECT players.id FROM players, rooms WHERE rooms.id=#{room_id} AND players.id=rooms.host_id;", (result)->
+					if result.rows.length is 0
+						pg.query "SELECT id FROM players WHERE room_id=#{room_id} LIMIT 1;", (result)->
+							if result.rows.length > 0
+								new_host = result.rows[0]
+
+								pg.query "UPDATE rooms SET host_id=#{new_host.id} WHERE id=#{room_id};", ->
+									console.log "host in room ID #{room_id} changed to ID #{new_host.id}"
+									io.to(room_id).emit EVENTS['host changed'], new_host.id
+							else
+								pg.query "DELETE FROM rooms WHERE id=#{room_id};"
 
 	'join room': (socket, data)->
 		if typeof data is 'string'

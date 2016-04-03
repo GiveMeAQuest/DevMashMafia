@@ -442,7 +442,8 @@ webClient.controller('roomCtrl', [
     var playersInit, roomInit;
     $scope.$on('$destroy', function() {
       socket.removeAllListeners('player joined');
-      return socket.removeAllListeners('player left');
+      socket.removeAllListeners('player left');
+      return socket.removeAllListeners('host changed');
     });
     if ($rootScope.player == null) {
       $location.url('/');
@@ -485,7 +486,7 @@ webClient.controller('roomCtrl', [
       $scope.players.push(player);
       return $scope.$apply();
     });
-    return socket.on('player left', function(player_id) {
+    socket.on('player left', function(player_id) {
       var i, j, len, player, ref, results;
       ref = $scope.players;
       results = [];
@@ -500,6 +501,10 @@ webClient.controller('roomCtrl', [
         }
       }
       return results;
+    });
+    return socket.on('host changed', function(host_id) {
+      $scope.room.host_id = host_id;
+      return $scope.$apply();
     });
   }
 ]);

@@ -3,6 +3,7 @@ webClient.controller 'roomCtrl', ['$scope', '$rootScope', '$routeParams', '$loca
 	$scope.$on '$destroy', ->
 		socket.removeAllListeners 'player joined'
 		socket.removeAllListeners 'player left'
+		socket.removeAllListeners 'host changed'
 
 	if !$rootScope.player?
 		$location.url '/'
@@ -54,5 +55,9 @@ webClient.controller 'roomCtrl', ['$scope', '$rootScope', '$routeParams', '$loca
 				$scope.players.splice i, 1
 				$scope.$apply()
 				break
+
+	socket.on 'host changed', (host_id)->
+		$scope.room.host_id = host_id
+		$scope.$apply()
 
 ]
