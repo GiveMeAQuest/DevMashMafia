@@ -9,9 +9,9 @@ events = [
 	'create room'
 	'room created'
 	'player joined'
+	'player left'
 	'get room'
 	'room'
-	'player left'
 ]
 
 events_new = {}
