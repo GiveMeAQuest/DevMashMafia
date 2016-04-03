@@ -8,6 +8,7 @@
 - data: {nickname, room_id}
  - nickname: ник игрока (строка)
  - room_id: ID комнаты (число)
+
 Что возвращается:
 - event: "room joined"
 - data: room_id
@@ -17,6 +18,7 @@
 - event: "create room"
 - data: {players}
  - players: Необходимое кол-во игроков в комнате (число)
+ 
 Что возвращается:
 - event: "room created"
 - data: room_id
@@ -25,6 +27,7 @@
 Чтобы получить список игроков в комнате (до начала игры):
 - event: "get waiting players"
 - data: -
+
 Что возвращается:
 - event: "players"
 - data: [player]
@@ -35,6 +38,7 @@
 Чтобы выйти из комнаты:
 - event: "leave room"
 - data: -
+
 Что возвращается:
 - event: "room left"
 - data: -
