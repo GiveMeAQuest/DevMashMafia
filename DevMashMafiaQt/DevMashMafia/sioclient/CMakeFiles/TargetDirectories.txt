@@ -1,0 +1,8 @@
+/home/vlad/socket.io-client-cpp/CMakeFiles/edit_cache.dir
+/home/vlad/socket.io-client-cpp/CMakeFiles/list_install_components.dir
+/home/vlad/socket.io-client-cpp/CMakeFiles/install.dir
+/home/vlad/socket.io-client-cpp/CMakeFiles/install/local.dir
+/home/vlad/socket.io-client-cpp/CMakeFiles/install/strip.dir
+/home/vlad/socket.io-client-cpp/CMakeFiles/rebuild_cache.dir
+/home/vlad/socket.io-client-cpp/CMakeFiles/sioclient_tls.dir
+/home/vlad/socket.io-client-cpp/CMakeFiles/sioclient.dir
