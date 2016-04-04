@@ -13,6 +13,7 @@ events = [
 	'get room'
 	'room'
 	'host changed'
+	'reconnect'
 ]
 
 events_new = {}
