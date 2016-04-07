@@ -1,16 +1,16 @@
 should = require 'should'
 request = require 'request'
-socket = require('socket.io-client') 'http://localhost:3000'
+socket = require('socket.io-client') 'devmashmafia.herokuapp.com'
 
 describe 'socket events', ->
 	@slow 5000
-	@timeout 10000
+	#@timeout 10000
 
 	@room_id = @player = EVENTS = null
 
 	it 'should create room', (done)=>
 
-		request.get 'http://localhost:3000/api/events', (err, response)=>
+		request.get 'http://devmashmafia.herokuapp.com/api/events', (err, response)=>
 
 			EVENTS = response.body
 			if typeof EVENTS is 'string' then EVENTS = JSON.parse EVENTS
@@ -90,7 +90,7 @@ describe 'socket events', ->
 
 		socket.close()
 
-		socket = require('socket.io-client') 'http://localhost:3000'
+		socket = require('socket.io-client') 'devmashmafia.herokuapp.com'
 
 		socket.on 'connect', =>
 
