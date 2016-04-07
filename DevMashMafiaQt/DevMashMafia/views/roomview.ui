@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>218</width>
-    <height>174</height>
+    <height>213</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,18 +20,22 @@
    <item>
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
-      <widget class="QLabel" name="label">
-       <property name="text">
-        <string>Room id:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="roomId">
-       <property name="text">
-        <string/>
-       </property>
-      </widget>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Room id:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="roomId">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
      <item>
       <spacer name="verticalSpacer">
@@ -47,9 +51,46 @@
       </spacer>
      </item>
      <item>
+      <widget class="QPushButton" name="pushButton_2">
+       <property name="text">
+        <string>Ready</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_2">
+       <property name="font">
+        <font>
+         <pointsize>9</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Press when you are ready to start game</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="pushButton">
        <property name="text">
         <string>Leave room</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_3">
+       <property name="font">
+        <font>
+         <pointsize>9</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Press to leave room</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
