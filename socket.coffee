@@ -155,9 +155,9 @@ module.exports = (server)->
 	io.on 'connection', (socket)->
 		console.log 'new socket connection'
 
-		funccWithOneArg = {}
+		funcsWithOneArg = {}
 		for event, func in funcs
-			funccWithOneArg[event] = func
+			funcsWithOneArg[event] = func
 
 		for event, func in funcsWithOneArg
 			socket.on event, (arg) ->
