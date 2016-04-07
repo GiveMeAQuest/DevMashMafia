@@ -155,13 +155,20 @@ module.exports = (server)->
 	io.on 'connection', (socket)->
 		console.log 'new socket connection'
 
-		funccWithOneArg = {}
-		for event, func in funcs
-			funccWithOneArg[event] = func
+		socket.on EVENTS['join room'], (data)->
+			funcs['join room'] socket, data
 
-		for event, func in funcsWithOneArg
-			socket.on event, (arg) ->
-				funcsWithOneArg[event] socket, args
+		socket.on EVENTS['get waiting players'], (room_id)->
+			funcs['get waiting players'] socket, room_id
+
+		socket.on EVENTS['leave room'], (player_id)->
+			funcs['leave room'] socket, player_id
+
+		socket.on EVENTS['create room'], (params)->
+			funcs['create room'] socket, params
+
+		socket.on EVENTS['get room'], (room_id)->
+			funcs['get room'] socket, room_id
 
 		socket.on 'disconnect', ->
 			funcs['disconnect'] socket
