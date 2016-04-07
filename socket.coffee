@@ -48,6 +48,7 @@ funcs =
 
 				io.to(room_id).emit EVENTS['player left'], JSON.stringify
 					id: player_id
+
 				console.log "player from room ID #{room_id} left"
 
 				pg.query "SELECT players.id FROM players, rooms WHERE rooms.id=#{room_id} AND players.id=rooms.host_id;", (result)->
