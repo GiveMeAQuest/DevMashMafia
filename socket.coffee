@@ -132,6 +132,7 @@ funcs =
 	'get room': (socket, room_id)->
 		if isNaN room_id
 			console.log "get room: invalid data!"
+			console.log "room_id is #{room_id}"
 			socket.emit EVENTS['err'], "Invalid data!"
 			return
 
@@ -155,13 +156,18 @@ module.exports = (server)->
 	io.on 'connection', (socket)->
 		console.log 'new socket connection'
 
-		funcsWithOneArg = {}
-		for event, func of funcs
-			funcsWithOneArg[event] = func
-
-		for event, func of funcsWithOneArg
-			socket.on event, (arg) ->
-				funcsWithOneArg[event] socket, args
+		funcsWithOneArg = [
+			'leave room', 
+			'join room',
+			'get waiting players', 
+			'create room' ,
+			'get room',
+		]
+	
+		for event in funcsWithOneArg
+			console.log event, EVENTS[event]
+			socket.on EVENTS[event], do (event) ->
+				(arg) -> funcs[event] socket, arg
 
 		socket.on 'disconnect', ->
 			funcs['disconnect'] socket
