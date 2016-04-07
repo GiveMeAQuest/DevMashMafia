@@ -1,33 +1,21 @@
-webClient.controller 'indexCtrl', ['$scope', '$rootScope', '$location', 'socket', ($scope, $rootScope, $location, socket)->
+webClient.controller 'indexCtrl', ['$scope', '$rootScope', '$q', '$location', 'socket', ($scope, $rootScope, $q, $location, socket)->
 
-	$scope.$on '$destroy', ->
-		socket.removeAllListeners 'err'
+	loadInit = $q.defer()
 
-	socket.on 'err', (error)->
-		$scope.loading = false
-		$scope.error = error
-		$scope.$apply()
+	if $rootScope.player?
+		if $rootScope.$storage.reconnect_token?
+			socket.on 'err', (error)->
+				loadInit.resolve()
+			socket.emit 'reconnect', $rootScope.$storage.reconnect_token
+		else
+			delete $rootScope.player
 
-	socket.on 'room joined', (player)->
-		socket.removeAllListeners 'room joined'
-		if typeof player is 'string' then player = JSON.parse player
-		$rootScope.player = player
-		$location.url "/room/#{player.room_id}"
-		$scope.$apply()
+	formData = {}
 
-	$scope.joinRoom = (valid)->
-		if not valid
-			$scope.error = 'Some fields are incorrectly filled!'
-			return
-			
-		$scope.loading = true
+	socket.on 'room joined', (room_id)->
+		$location.url '/lobby'
 
-		socket.emit 'join room',
-			nickname: $scope.nickname
-			room_id: $scope.room_id
+	$scope.joinRoom = ->
 
-	$scope.createRoom = ->
-		$scope.loading = true
-		$location.url '/room/create'
 
 ]

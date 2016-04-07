@@ -10,11 +10,11 @@
 					.form-group
 						.input-group
 							.input-group-addon Room ID
-							input.form-control(type='number', min=1, ng-model='$parent.room_id', required)
+							input.form-control(type='number', min=1, ng-model='formData.room_id', required)
 					.form-group
-						input.form-control(type='text', ng-model='$parent.nickname', placeholder='Nickname', required)
+						input.form-control(type='text', ng-model='formData.nickname', placeholder='Nickname', required)
 					.form-group
-						button.btn.btn-success.form-control(type='submit', ng-click='joinRoom(joinRoomForm.$valid)') Join room
+						button.btn.btn-success.col-xs-12(type='submit', ng-disabled='joinRoomForm.$invalid', ng-click='joinRoom()') Join room
 					b.text-danger(ng-show='error') {{error}}
 							
 					.form-group

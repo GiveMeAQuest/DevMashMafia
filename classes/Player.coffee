@@ -1,10 +1,13 @@
+uuid = require 'uuid'
+
 class Player
 
-	constructor: (data)->
-		@id = data.id
-		@socket_id = data.socket_id
-		@room_id = data.room_id
-		
+	constructor: (params)->
+		for k of params
+			this[k] = params[k]
+		@reconnect_token = uuid.v4()
+		@online = true
+
 		console.log "new player ID #{@id} created"
 
 module.exports = Player

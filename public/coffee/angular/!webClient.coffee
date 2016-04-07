@@ -1,4 +1,4 @@
-webClient = angular.module 'webClient', ['ngRoute', 'ui.bootstrap']
+webClient = angular.module 'webClient', ['ngRoute', 'ui.bootstrap', 'ngStorage']
 
 webClient.config ['$routeProvider', ($routeProvider)->
 	$routeProvider
@@ -7,15 +7,21 @@ webClient.config ['$routeProvider', ($routeProvider)->
 		templateUrl: '/pages/index'
 		controller: 'indexCtrl'
 
-	.when '/room/create',
+	.when '/new',
 		templateUrl: '/pages/createRoom'
 		controller: 'createRoomCtrl'
 
-	.when '/room/:id',
-		templateUrl: (params)-> "/pages/room/#{params.id}",
+	.when '/lobby',
+		templateUrl: "/pages/room"
 		controller: 'roomCtrl'
 
 	.otherwise
 		redirectTo: '/'
+
+]
+
+webClient.run ['$rootScope', '$localStorage', ($rootScope, $localStorage)->
+
+	$rootScope.$storage = $localStorage
 
 ]
