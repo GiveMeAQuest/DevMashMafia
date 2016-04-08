@@ -46,6 +46,8 @@ funcs =
 				room_id = result.rows[0].room_id
 				player_id = result.rows[0].player_id
 
+				socket.leave room_id
+
 				io.to(room_id).emit EVENTS['player left'], JSON.stringify
 					id: player_id
 
