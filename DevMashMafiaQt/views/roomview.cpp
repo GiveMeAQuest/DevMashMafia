@@ -20,11 +20,13 @@ RoomView::RoomView(QWidget *parent,
     Q_EMIT getWaitingPlayers();
 }
 
+#include <QJsonDocument>
 void RoomView::players(QJsonArray players)
 {
     ui->listWidget->clear();
     for (int i = 0; i < players.size(); i++) {
-        ui->listWidget->addItem(players[i].toObject()["nickname"].toString());
+        QString item = players[i].toObject()["nickname"].toString();
+        ui->listWidget->addItem(item);
     }
 }
 

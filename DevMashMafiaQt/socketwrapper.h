@@ -37,7 +37,7 @@ private:
     int curRoomId;
     std::string getSocketEvent(QString const& event);
     void sendEvent(QString event, QJsonObject &params);
-    void printEvent(const string &name);
+    void printEvent(const string &name, const message::ptr &data);
     void OnConnected(std::string const& nsp);
     void OnJoinedRoom(std::string const& name,message::ptr const& data,bool hasAck,message::list &ack_resp);
     void OnCreatedRoom(std::string const& name,message::ptr const& data,bool hasAck,message::list &ack_resp);
