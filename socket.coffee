@@ -108,8 +108,8 @@ funcs =
 							if data.reconnect_token
 								new_player = data.player
 							else
-								for player, i in PLAYERS
-									if player.socket_id = socket.id
+								for cur, i in PLAYERS
+									if cur.socket_id = socket.id
 										PLAYERS.splice i, 1
 										break
 								PLAYERS.push new Player

@@ -1,12 +1,13 @@
 should = require 'should'
 request = require 'request'
 socket = require('socket.io-client') 'devmashmafia.herokuapp.com'
+socket2 = require('socket.io-client') 'devmashmafia.herokuapp.com'
 
 describe 'socket events', ->
 	@slow 5000
-	#@timeout 10000
+	@timeout 10000
 
-	@room_id = @player = EVENTS = null
+	@room_id = @player = @player2 = EVENTS = null
 
 	it 'should create room', (done)=>
 
@@ -64,6 +65,23 @@ describe 'socket events', ->
 			data.phase.should.be.String()
 			done()
 
+	it 'should join room (2)', (done)=>
+
+		data =
+			room_id: @room_id
+			nickname: 'test2'
+
+		socket2.emit EVENTS['join room'], data
+
+		socket2.on EVENTS['room joined'], (data)=>
+
+			data = JSON.parse data
+
+			data.should.have.properties ['id', 'nickname', 'room_id', 'reconnect_token']
+			data.room_id.should.equal @room_id
+			@player2 = data
+			done()
+
 	it 'should get waiting players', (done)->
 
 		socket.emit EVENTS['get waiting players']
@@ -72,12 +90,31 @@ describe 'socket events', ->
 			data = JSON.parse data
 
 			data.should.have.property 'players'
-			data.players.length.should.be.exactly 1
+			data.players.length.should.be.exactly 2
 			for player in data.players
 				player.should.have.properties ['id', 'nickname']
 				player.id.should.be.Number()
 				player.nickname.should.be.String()
 			done()
+
+	it 'should get waiting players (2)', (done)->
+
+		socket2.emit EVENTS['get waiting players']
+
+		socket2.on EVENTS['players'], (data)->
+
+			data = JSON.parse data
+
+			data.players.length.should.be.exactly 2
+			done()
+
+	it 'should leave room (2)', (done)->
+
+		socket2.emit EVENTS['leave room']
+
+		socket2.on EVENTS['room left'], ->
+			done()
+
 
 	it 'should leave room', (done)->
 
