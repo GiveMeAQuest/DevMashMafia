@@ -109,7 +109,7 @@ funcs =
 								new_player = data.player
 							else
 								for cur, i in PLAYERS
-									if cur.socket_id = socket.id
+									if cur.socket_id is socket.id
 										PLAYERS.splice i, 1
 										break
 								PLAYERS.push new Player
