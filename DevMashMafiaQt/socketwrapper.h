@@ -54,6 +54,8 @@ Q_SIGNALS:
     void socketFailed();
     void roomJoined(int room_id);
     void players(QJsonArray players);
+    void playerJoin(QJsonObject player);
+    void playerLeft(int player_id);
     void roomLeft();
     void error(QString mess);
 

@@ -11,21 +11,49 @@ RoomView::RoomView(QWidget *parent,
 {
     ui->setupUi(this);
     ui->roomId->setText(QString::number(roomId));
+
     connect(this, SIGNAL(getWaitingPlayers()),
             socket, SLOT(getWaitingPlayers()));
-    connect(socket, SIGNAL(players(QJsonArray)),
-            this, SLOT(players(QJsonArray)));
     connect(this, SIGNAL(leaveRoom()),
             socket, SLOT(leaveRoom()));
+    connect(socket, SIGNAL(players(QJsonArray)),
+            this, SLOT(players(QJsonArray)));
+    connect(socket, SIGNAL(playerJoin(QJsonObject)),Le
+            this, SLOT(playerJoin(QJsonObject)));
+    connect(socket, SIGNAL(player),
+            this, SLOT(playerLeft(int)));
     Q_EMIT getWaitingPlayers();
 }
 
-#include <QJsonDocument>
 void RoomView::players(QJsonArray players)
 {
+    this->playersArray = players;
+    updatePlayers();
+}
+
+void RoomView::playerJoin(QJsonObject player)
+{
+    playersArray.append(player);
+    ui->listWidget->addItem(player["nickname"].toString());
+}
+
+void RoomView::playerLeft(int player_id)
+{
+    for (int i = 0; i < playersArray.size(); i++) {
+        if (playersArray[i].toObject()["id"] == player_id) {
+            playersArray.removeAt(i);
+            delete ui->listWidget->item(i);
+            break;
+        }
+    }
+
+}
+
+void RoomView::updatePlayers()
+{
     ui->listWidget->clear();
-    for (int i = 0; i < players.size(); i++) {
-        QString item = players[i].toObject()["nickname"].toString();
+    for (int i = 0; i < playersArray.size(); i++) {
+        QString item = playersArray[i].toObject()["nickname"].toString();
         ui->listWidget->addItem(item);
     }
 }

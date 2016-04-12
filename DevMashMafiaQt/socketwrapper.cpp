@@ -115,13 +115,16 @@ void SocketWrapper::OnPlayers(const string &name, const message::ptr &data, bool
 void SocketWrapper::OnPlayerJoined(const string &name, const message::ptr &data, bool hasAck, message::list &ack_resp)
 {
     printEvent(name, data);
-    getWaitingPlayers();
+    QJsonObject player = QJsonDocument::fromJson(data->get_string().c_str()).object();
+    Q_EMIT playerJoin(player);
 }
 
 void SocketWrapper::OnPlayerLeft(const string &name, const message::ptr &data, bool hasAck, message::list &ack_resp)
 {
     printEvent(name, data);
-    getWaitingPlayers();
+    QJsonObject player = QJsonDocument::fromJson(data->get_string().c_str()).object();
+    int player_id = player["id"].toInt();
+    Q_EMIT playerLeft(player_id);
 }
 
 void SocketWrapper::OnRoomLeft(const string &name, const message::ptr &data, bool hasAck, message::list &ack_resp)

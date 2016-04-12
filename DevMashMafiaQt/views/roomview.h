@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QJsonArray>
+#include <QJsonObject>
 
 #include "socketwrapper.h"
 
@@ -23,7 +24,9 @@ public:
 private:
     Ui::RoomView *ui;
     SocketWrapper *socket;
+    QJsonArray playersArray;
     int roomId;
+    void updatePlayers();
 
 Q_SIGNALS:
     void getWaitingPlayers();
@@ -31,6 +34,8 @@ Q_SIGNALS:
 
 public Q_SLOTS:
     void players(QJsonArray players);
+    void playerJoin(QJsonObject player);
+    void playerLeft(int player_id);
 private Q_SLOTS:
     void on_pushButton_clicked();
 };
