@@ -193,7 +193,7 @@ funcs =
 			socket.emit EVENTS['room'], JSON.stringify room
 
 	'reconnect': (socket, data)->
-		data = JSON.parse data
+		if typeof data is 'string' then data = JSON.parse data
 		console.log "player is trying to reconnect with token #{data.reconnect_token}"
 		player = null
 		player_i = null
