@@ -14,6 +14,8 @@ events = [
 	'room'
 	'host changed'
 	'reconnect'
+	'start game'
+	'game started'
 ]
 
 events_new = {}

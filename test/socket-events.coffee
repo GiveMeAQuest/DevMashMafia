@@ -1,17 +1,20 @@
+HOST = 'http://localhost:3000'
+
 should = require 'should'
 request = require 'request'
-socket = require('socket.io-client') 'devmashmafia.herokuapp.com'
-socket2 = require('socket.io-client') 'devmashmafia.herokuapp.com'
+Promise = require 'promise'
+socket = require('socket.io-client') HOST
+socket2 = require('socket.io-client') HOST
 
 describe 'socket events', ->
-	@slow 5000
-	@timeout 10000
+	@slow 4000
+	@timeout 5000
 
 	@room_id = @player = @player2 = EVENTS = null
 
-	it 'should create room', (done)=>
+	it 'should create room (1)', (done)=>
 
-		request.get 'http://devmashmafia.herokuapp.com/api/events', (err, response)=>
+		request.get "#{HOST}/api/events", (err, response)=>
 
 			EVENTS = response.body
 			if typeof EVENTS is 'string' then EVENTS = JSON.parse EVENTS
@@ -31,7 +34,7 @@ describe 'socket events', ->
 
 			socket.emit EVENTS['create room'], data
 
-	it 'should join room', (done)=>
+	it 'should join room (1)', (done)=>
 
 		data =
 			room_id: @room_id
@@ -52,7 +55,7 @@ describe 'socket events', ->
 
 			done()
 
-	it 'should get room info', (done)=>
+	it 'should get room info (1)', (done)=>
 
 		socket.emit EVENTS['get room']
 
@@ -63,6 +66,21 @@ describe 'socket events', ->
 			data.id.should.be.Number().and.equal @room_id
 			data.host_id.should.be.Number().and.equal @player.id
 			data.phase.should.be.String()
+			done()
+
+	it 'should get waiting players (1)', (done)->
+
+		socket.emit EVENTS['get waiting players']
+
+		socket.on EVENTS['players'], (data)->
+			data = JSON.parse data
+
+			data.should.have.property 'players'
+			data.players.length.should.be.exactly 1
+			for player in data.players
+				player.should.have.properties ['id', 'nickname']
+				player.id.should.be.Number()
+				player.nickname.should.be.String()
 			done()
 
 	it 'should join room (2)', (done)=>
@@ -82,21 +100,6 @@ describe 'socket events', ->
 			@player2 = data
 			done()
 
-	it 'should get waiting players', (done)->
-
-		socket.emit EVENTS['get waiting players']
-
-		socket.on EVENTS['players'], (data)->
-			data = JSON.parse data
-
-			data.should.have.property 'players'
-			data.players.length.should.be.exactly 2
-			for player in data.players
-				player.should.have.properties ['id', 'nickname']
-				player.id.should.be.Number()
-				player.nickname.should.be.String()
-			done()
-
 	it 'should get waiting players (2)', (done)->
 
 		socket2.emit EVENTS['get waiting players']
@@ -108,26 +111,83 @@ describe 'socket events', ->
 			data.players.length.should.be.exactly 2
 			done()
 
-	it 'should leave room (2)', (done)->
+	it 'should not start the game', (done)->
 
-		socket2.emit EVENTS['leave room']
+		socket2.emit EVENTS['start game']
 
-		socket2.on EVENTS['room left'], ->
+		socket2.on EVENTS['err'], ->
 			done()
 
+	it 'should start the game (1)', ->
 
-	it 'should leave room', (done)->
+		q1 = new Promise (resolve, reject)->
+
+			socket.on EVENTS['game started'], (data)->
+				data = JSON.parse data
+
+				data.should.have.property 'phase_name'
+				data.phase_name.should.be.exactly 'night begin'
+				resolve()
+
+		q2 = new Promise (resolve, reject)->
+
+			socket2.on EVENTS['game started'], (data)->
+				data = JSON.parse data
+
+				data.should.have.property 'phase_name'
+				data.phase_name.should.be.exactly 'night begin'
+				resolve()
+
+		socket.emit EVENTS['start game']
+
+		Promise.all [q1, q2]
+
+
+	it 'should leave room (1) and pass host to (2)', =>
+
+		q1 = new Promise (resolve, reject)->
+
+			socket.on EVENTS['room left'], ->
+				resolve()
+
+		q2 = new Promise (resolve, reject)=>
+
+			socket2.on EVENTS['host changed'], (data)=>
+
+				data = JSON.parse data
+				data.should.have.property 'id'
+				data.id.should.equal @player2.id
+				resolve()
 
 		socket.emit EVENTS['leave room']
 
-		socket.on EVENTS['room left'], ->
-			done()
-
-	it 'should not reconnect', (done)=>
+		Promise.all [q1, q2]
+		
+	it 'should reconnect (1)', (done)=>
 
 		socket.close()
 
-		socket = require('socket.io-client') 'devmashmafia.herokuapp.com'
+		socket = require('socket.io-client') HOST
+
+		socket.on 'connect', =>
+
+			data =
+				reconnect_token: @player.reconnect_token
+
+			socket.emit EVENTS['reconnect'], JSON.stringify data
+
+			socket.on EVENTS['room joined'], (data)=>
+				data = JSON.parse data
+
+				data.room_id.should.be.equal @room_id
+				data.nickname.should.be.equal @player.nickname
+				done()
+
+	it.skip 'should not reconnect (1)', (done)=>
+
+		socket.close()
+
+		socket = require('socket.io-client') HOST
 
 		socket.on 'connect', =>
 
@@ -139,23 +199,29 @@ describe 'socket events', ->
 			socket.on EVENTS['err'], (error)->
 				done()
 
-	it.skip 'should reconnect', (done)=>
+	it 'should reconnect (2)', (done)=>
 
-		socket.close()
+		socket2.close()
 
-		socket = require('socket.io-client') 'http://localhost:3000'
+		socket2 = require('socket.io-client') HOST
 
-		socket.on 'connect', =>
+		socket2.on 'connect', =>
 
 			data =
 				reconnect_token: @player.reconnect_token
 
-			socket.emit EVENTS['reconnect'], JSON.stringify data
+			socket2.emit EVENTS['reconnect'], JSON.stringify data
 
-			socket.on EVENTS['join room'], (data)=>
+			socket2.on EVENTS['room joined'], (data)=>
 				data = JSON.parse data
 
-				data.id.should.be.equal @player.id
 				data.room_id.should.be.equal @room_id
-				data.nickname.should.be.equal @player.nickname
+				data.nickname.should.be.equal @player2.nickname
 				done()
+
+	it 'should leave room (2)', (done)->
+
+		socket2.emit EVENTS['leave room']
+
+		socket2.on EVENTS['room left'], ->
+			done()

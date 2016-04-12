@@ -73,12 +73,14 @@ funcs =
 			catch e
 				console.log 'join room: invalid data!'
 				socket.emit EVENTS['err'], JSON.stringify
+					event: 'join room'
 					error: 'Invalid data!'
 				return
 
 		if (!data.reconnect_token?) and (isNaN data.room_id or !data.nickname?)
 			console.log 'join room: invalid data!'
 			socket.emit EVENTS['err'], JSON.stringify
+				event: 'join room'
 				error: 'Invalid data!'
 			return
 
@@ -87,18 +89,21 @@ funcs =
 			if result.rows.length is 0
 				console.log 'Error: no such room'
 				socket.emit EVENTS['err'], JSON.stringify
+					event: 'join room'
 					error: 'Room with such ID doesn\'t exist'
 			else
 				pg.query "SELECT * FROM players WHERE nickname='#{data.nickname}' AND room_id=#{data.room_id};", (result)->
 					if result.rows.length > 0
 						console.log 'Error: user exists'
 						socket.emit EVENTS['err'], JSON.stringify
+							event: 'join room'
 							error: 'Player with same username has already joined this room'
 					else
 						pg.query "INSERT INTO players (nickname, room_id) VALUES ('#{data.nickname}', #{data.room_id}) RETURNING *;", (result, err)->
 
 							if err?
 								socket.emit EVENTS['err'], JSON.stringify
+									event: 'join room'
 									error: err
 								return
 
@@ -106,6 +111,7 @@ funcs =
 							new_player = null
 
 							if data.reconnect_token
+								data.player.id = player.id
 								new_player = data.player
 							else
 								for cur, i in PLAYERS
@@ -134,6 +140,7 @@ funcs =
 		if i is -1
 			console.log 'get waiting players: user is not in room'
 			socket.emit EVENTS['err'], JSON.stringify
+				event: 'get waiting players'
 				error: 'You are not in room'
 			return
 		player = PLAYERS[i]
@@ -149,12 +156,14 @@ funcs =
 			catch e
 				console.log 'create room: invalid data!'
 				socket.emit EVENTS['err'], JSON.stringify
+					event: 'create room'
 					error: 'Invalid data!'
 				return
 
 		if isNaN params.players
 			console.log 'create room: invalid data!'
 			socket.emit EVENTS['err'], JSON.stringify
+				event: 'create room'
 				error: 'Invalid data!'
 			return
 		
@@ -203,7 +212,35 @@ funcs =
 		else
 			console.log 'error: invalid reconnect token'
 			socket.emit EVENTS['err'], JSON.stringify
+				event: 'reconnect'
 				error: 'Invalid reconnect token'
+
+	'start game': (socket)->
+		i = findPlayer socket.id
+		if i is -1
+			console.log 'error: player is not in room'
+			socket.emit EVENTS['err'], JSON.stringify
+				event: 'start game'
+				error: 'You are not in room'
+			return
+
+		player = PLAYERS[i]
+
+		pg.query "SELECT host_id FROM rooms WHERE id=#{player.room_id};", (result)->
+
+			room = result.rows[0]
+			if room.host_id isnt player.id
+				console.log 'error: player is not a host'
+				socket.emit EVENTS['err'], JSON.stringify
+					event: 'start game'
+					error: 'You are not a host'
+				return
+
+			pg.query "WITH phase as (SELECT * FROM phases WHERE name='night begin') UPDATE rooms SET phase_id=phase.id FROM phase WHERE rooms.id=#{player.room_id} RETURNING phase.name;", (result)->
+				console.log "game started in room ID #{player.room_id}"
+				io.to(player.room_id).emit EVENTS['game started'], JSON.stringify
+					phase_name: result.rows[0].name
+
 
 	'disconnect': (socket)->
 		ind = findPlayer socket.id
@@ -237,7 +274,10 @@ module.exports = (server)->
 		socket.on EVENTS['reconnect'], (data)->
 			funcs['reconnect'] socket, data
 
+		socket.on EVENTS['start game'], ->
+			funcs['start game'] socket
+
 		socket.on 'disconnect', ->
-			funcs['disconnect'] socket
+			funcs['disconnect'] socket 
 
 	io
