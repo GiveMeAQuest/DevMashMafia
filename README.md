@@ -64,7 +64,7 @@ __Ответ сервера__
 - `data`: {players}
   - `players`: [player]
     - `player`: {id, nickname}
-      - `id`: ID игрока (число)
+      - `id`: ID игрока (ВСЕГДА число)
       - `nickname`: Ник игрока (строка)
 
 ---
