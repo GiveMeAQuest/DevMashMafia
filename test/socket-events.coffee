@@ -122,7 +122,7 @@ describe 'socket events', ->
 
 		q1 = new Promise (resolve, reject)->
 
-			socket.on EVENTS['game started'], (data)->
+			socket.on EVENTS['phase changed'], (data)->
 				data = JSON.parse data
 
 				data.should.have.property 'phase_name'
@@ -131,7 +131,7 @@ describe 'socket events', ->
 
 		q2 = new Promise (resolve, reject)->
 
-			socket2.on EVENTS['game started'], (data)->
+			socket2.on EVENTS['phase changed'], (data)->
 				data = JSON.parse data
 
 				data.should.have.property 'phase_name'
@@ -163,7 +163,7 @@ describe 'socket events', ->
 
 		Promise.all [q1, q2]
 		
-	it 'should reconnect (1)', (done)=>
+	it.skip 'should reconnect (1)', (done)=>
 
 		socket.close()
 
@@ -199,7 +199,7 @@ describe 'socket events', ->
 			socket.on EVENTS['err'], (error)->
 				done()
 
-	it 'should reconnect (2)', (done)=>
+	it.skip 'should reconnect (2)', (done)=>
 
 		socket2.close()
 

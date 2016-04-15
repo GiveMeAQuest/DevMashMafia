@@ -226,7 +226,7 @@ funcs =
 
 		player = PLAYERS[i]
 
-		pg.query "SELECT host_id FROM rooms WHERE id=#{player.room_id};", (result)->
+		pg.query "SELECT id, host_id FROM rooms WHERE id=#{player.room_id};", (result)->
 
 			room = result.rows[0]
 			if room.host_id isnt player.id
@@ -236,11 +236,15 @@ funcs =
 					error: 'You are not a host'
 				return
 
-			pg.query "WITH phase as (SELECT * FROM phases WHERE name='night begin') UPDATE rooms SET phase_id=phase.id FROM phase WHERE rooms.id=#{player.room_id} RETURNING phase.name;", (result)->
-				console.log "game started in room ID #{player.room_id}"
-				io.to(player.room_id).emit EVENTS['game started'], JSON.stringify
-					phase_name: result.rows[0].name
+			funcs['change phase']
+				room_id: room.id
+				phase_name: 'night begin'
 
+	'change phase': (data)->
+		pg.query "WITH phase as (SELECT id FROM phases WHERE name='#{data.phase_name}') UPDATE rooms SET phase_id=phase.id FROM phase WHERE rooms.id=#{data.room_id};", ->
+			console.log "Phase changed to '#{data.phase_name}' in room ID #{data.room_id}"
+			io.to(data.room_id).emit EVENTS['phase changed'], JSON.stringify
+				phase_name: data.phase_name
 
 	'disconnect': (socket)->
 		ind = findPlayer socket.id
