@@ -15,7 +15,7 @@ events = [
 	'host changed'
 	'reconnect'
 	'start game'
-	'game started'
+	'phase changed'
 ]
 
 events_new = {}
