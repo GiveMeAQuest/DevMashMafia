@@ -7,6 +7,8 @@ class Player
 			this[k] = params[k]
 		@reconnect_token = uuid.v4()
 		@online = true
+		@votes = 0
+		@role_id = 0
 
 		console.log "new player ID #{@id} created"
 

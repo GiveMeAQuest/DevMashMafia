@@ -13,6 +13,12 @@ findPlayer = (socket_id)->
 			return i
 	-1
 
+findPlayerById = (player_id)->
+	for player, i in PLAYERS
+		if player.id is player_id
+			return i
+	-1
+
 pg.query "DELETE FROM players; DELETE FROM rooms;", ->
 	console.log 'players and rooms erased'
 
@@ -236,15 +242,88 @@ funcs =
 					error: 'You are not a host'
 				return
 
-			funcs['change phase']
-				room_id: room.id
-				phase_name: 'night begin'
+			console.log "Player #{player.nickname} is starting game in room ID #{player.room_id}"
 
-	'change phase': (data)->
+			players = []
+			sockets_in_room = Object.keys io.nsps['/'].adapter.rooms[player.room_id].sockets
+			for cur in sockets_in_room
+				cur = io.sockets.connected[cur]
+				i = findPlayer cur.id
+				cur_player = PLAYERS[i]
+				cur_player.socket = cur
+				players.push cur_player
+
+			# Shuffling the array
+			currentIndex = players.length
+			while (currentIndex isnt 0)
+				randomIndex = Math.floor Math.random() * currentIndex
+				--currentIndex
+				temporaryValue = players[currentIndex]
+				players[currentIndex] = players[randomIndex]
+				players[randomIndex] = temporaryValue
+
+			pg.query "SELECT * FROM roles;", (result)->
+				roles = {}
+				for role in result.rows
+					roles[role.name] = role
+
+				players[0].role = roles.mafia
+				if players.length >= 2
+					players[1].role = roles.citizen
+				if players.length >= 3
+					players[2].role = roles.citizen
+
+				for cur_player in players
+					cur_player.socket.emit EVENTS['role'], JSON.stringify
+						name: cur_player.role.name
+			setTimeout ->
+				funcs['change phase'] socket,
+					room_id: room.id
+					phase_name: 'night begin'
+			, 2000
+
+	'mafia vote': (socket, data)->
+		if typeof data is 'string' then data = JSON.parse data
+		i = findPlayer socket.id
+		player = PLAYERS[i]
+		pg.query "UPDATE rooms SET votes=votes+1 WHERE id=#{player.room_id};", ->
+			voted_i = findPlayer data.id
+			voted_player = PLAYERS[voted_i]
+			console.log "Player #{player.name} voted for #{voted_player.name}"
+			++voted_player.votes
+
+
+	'change phase': (socket, data)->
+
+		i = findPlayer socket.id
+		player = PLAYERS[i]
+
 		pg.query "WITH phase as (SELECT id FROM phases WHERE name='#{data.phase_name}') UPDATE rooms SET phase_id=phase.id FROM phase WHERE rooms.id=#{data.room_id};", ->
 			console.log "Phase changed to '#{data.phase_name}' in room ID #{data.room_id}"
 			io.to(data.room_id).emit EVENTS['phase changed'], JSON.stringify
 				phase_name: data.phase_name
+
+			switch data.phase_name
+
+				when 'night begin'
+					pg.query "UPDATE rooms SET votes=0 WHERE id=#{data.room_id};", ->
+						setTimeout ->
+							funcs['change phase'] socket,
+								room_id: data.room_id
+								phase_name: 'mafia begin'
+						, 1000
+
+				when 'mafia begin'
+					pg.query "SELECT * FROM players WHERE room_id=#{data.room_id};", (result)->
+						players = result.rows
+						sockets_in_room = Object.keys io.nsps['/'].adapter.rooms[data.room_id].sockets
+						for cur in sockets_in_room
+							cur = io.sockets.connected[cur]
+						
+
+
+
+
 
 	'disconnect': (socket)->
 		ind = findPlayer socket.id
@@ -280,6 +359,9 @@ module.exports = (server)->
 
 		socket.on EVENTS['start game'], ->
 			funcs['start game'] socket
+
+		socket.on EVENTS['mafia vote'], (data)->
+			funcs['mafia vote'] socket, data
 
 		socket.on 'disconnect', ->
 			funcs['disconnect'] socket 

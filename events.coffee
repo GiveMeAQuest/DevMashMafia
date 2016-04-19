@@ -16,6 +16,7 @@ events = [
 	'reconnect'
 	'start game'
 	'phase changed'
+	'role'
 ]
 
 events_new = {}
