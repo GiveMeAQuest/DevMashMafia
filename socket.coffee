@@ -310,15 +310,15 @@ funcs =
 								phase_name: 'mafia begin'
 						, 1000
 
-				###when 'mafia begin'
-					pg.query "WITH mafia_role AS (SELECT id FROM roles WHERE name='mafia') SELECT * FROM players WHERE room_id=#{data.room_id} AND role_id=mafia_role.id;", (result)->
+				when 'mafia begin'
+					pg.query "WITH mafia_role AS (SELECT id FROM roles WHERE name='mafia') SELECT * FROM players, mafia_role WHERE room_id=#{data.room_id} AND role_id=mafia_role.id;", (result)->
 						mafia_players = result.rows
 						for cur, i in mafia_players
 							mafia_players[i].socket = io.sockets.connected[cur.socket_id]
-						pg.query "WITH mafia_role AS (SELECT id FROM roles WHERE name='mafia') SELECT * FROM players WHERE room_id=#{data.room_id} AND NOT(role_id=mafia_role.id);", (result)->
+						pg.query "WITH mafia_role AS (SELECT id FROM roles WHERE name='mafia') SELECT * FROM players, mafia_role WHERE room_id=#{data.room_id} AND NOT(role_id=mafia_role.id);", (result)->
 							non_mafia_players = result.rows
-							for cur, i in players
-								players[i].socket = io.sockets.connected[cur.socket_id]###
+							for cur, i in non_mafia_players
+								non_mafia_players[i].socket = io.sockets.connected[cur.socket_id]
 						
 
 
