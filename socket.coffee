@@ -91,7 +91,17 @@ funcs =
 				socket.emit EVENTS['err'], JSON.stringify
 					event: 'join room'
 					error: 'Room with such ID doesn\'t exist'
-			else
+				return
+
+			room = result.rows[0]
+			pg.query "SELECT id FROM phases WHERE name='not started';", (result)->
+				if room.phase_id isnt result.rows[0].id
+					console.log 'Error: the game was started in this room'
+					socket.emit EVENTS['err'], JSON.stringify
+						event: 'join room'
+						error: 'The game was started in this room'
+					return
+
 				pg.query "SELECT * FROM players WHERE nickname='#{data.nickname}' AND room_id=#{data.room_id};", (result)->
 					if result.rows.length > 0
 						console.log 'Error: user exists'
@@ -432,9 +442,13 @@ funcs =
 					, 1000
 
 				when 'day begin'
-					io.to(data.room_id).emit EVENTS['phase changed'], JSON.stringify
-						phase_name: 'day begin'
 					pg.query "SELECT nickname FROM players, rooms WHERE rooms.id=#{data.room_id} AND players.id=rooms.killed_player_id;", (result)->
+						io.to(data.room_id).emit EVENTS['phase changed'], JSON.stringify
+							phase_name: 'day begin'
+							data:
+								killed_player:
+									id: result.rows[0].id
+									nickname: result.rows[0].nickname
 						console.log "Day: mafia has killed player #{result.rows[0].nickname}!"
 						setTimeout ->
 							funcs['change phase']
