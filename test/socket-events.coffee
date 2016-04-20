@@ -39,7 +39,7 @@ describe 'socket events', ->
 
 		data =
 			room_id: @room_id
-			nickname: 'test'
+			nickname: '1'
 
 		socket.emit EVENTS['join room'], JSON.stringify data
 
@@ -220,7 +220,6 @@ describe 'socket events', ->
 		cur_socket.emit EVENTS['mafia vote'], JSON.stringify
 			id: if @player.role isnt 'mafia' then @player.id else @player2.id
 
-
 	it 'should leave room (1) and pass host to (2)', =>
 
 		q1 = new Promise (resolve, reject)->
@@ -237,7 +236,9 @@ describe 'socket events', ->
 				data.id.should.equal @player2.id
 				resolve()
 
-		socket.emit EVENTS['leave room']
+		setTimeout ->
+			socket.emit EVENTS['leave room']
+		, 15000
 
 		Promise.all [q1, q2]
 		
