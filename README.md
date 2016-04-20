@@ -19,6 +19,7 @@
 
 #####Фазы игры
 - [night begin](#night-begin)
+- [mafia begin](#mafia-begin)
 
 
 ##Условные обозначения
@@ -181,3 +182,12 @@ __Ответ сервера__
 <a name='night-begin'></a>
 ####night begin
 - `data`: -
+
+<a name='mafia-begin'></a>
+###mafia begin
+Отправляется только мафии
+- `data`: {players}
+  - `players`: [player]
+    - `player`: {id, nickname}
+      - `id`: ID игрока (число)
+      - `nickname`: Ник игрока (число)
