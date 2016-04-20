@@ -8,6 +8,7 @@
 - [Получение данных о комнате, в которой находится игрок](#get-room)
 - [Возобновление игровой сесии](#reconnect)
 - [Начало игры](#start-game)
+- [Голосование мафии](#mafia-vote)
 
 #####События, отправляемые сервером пользователю
 - [Любая ошибка](#err)
@@ -20,6 +21,8 @@
 #####Фазы игры
 - [night begin](#night-begin)
 - [mafia begin](#mafia-begin)
+- [night end](#night-end)
+- [day begin](#day-begin)
 
 
 ##Условные обозначения
@@ -121,6 +124,14 @@ __Ответ сервера__
 - `event`: "start game"
 - `data`: -
 
+---
+
+<a name='mafia-vote'></a>
+####Голосование мафии
+- `event`: "mafia vote"
+- `data`: {id}
+  - `id`: ID игрока, за которого проголосовала мафия
+
 
 ###События, отправляемые сервером пользователю
 
@@ -171,8 +182,9 @@ __Ответ сервера__
 <a name='phase-changed'></a>
 ####Смена фазы игры в комнате игрока
 - `event`: "phase changed"
-- `data`: {phase_name}
+- `data`: {phase_name, data}
   - `phase_name`: Название новой фазы (строка)
+  - `data`: Зависит от фазы
 
 Подробнее см. [Фазы игры](#phases)
 
@@ -183,6 +195,8 @@ __Ответ сервера__
 ####night begin
 - `data`: -
 
+---
+
 <a name='mafia-begin'></a>
 ###mafia begin
 Отправляется только мафии
@@ -191,3 +205,18 @@ __Ответ сервера__
     - `player`: {id, nickname}
       - `id`: ID игрока (число)
       - `nickname`: Ник игрока (строка)
+
+---
+
+<a name='night-end'></a>
+###night end
+- `data`: -
+
+---
+
+<a name='day-begin'></a>
+###day begin
+- `data`: {killed_player}
+  - `killed_player`: {id, nickname}
+    - `id`: ID убитого игрока (число)
+    - `nickname`: Ник убитого игрока (строка)
