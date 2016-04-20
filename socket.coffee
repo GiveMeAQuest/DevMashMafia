@@ -271,6 +271,9 @@ funcs =
 						players[2].role = roles.citizen
 
 					for cur_player in players
+						i = findPlayer cur_player.socket.id
+						PLAYERS[i].role = cur_player.role
+						pg.query "UPDATE players SET role_id=#{cur_player.role.id} WHERE id=#{cur_player.id};"
 						cur_player.socket.emit EVENTS['role'], JSON.stringify
 							name: cur_player.role.name
 				setTimeout ->
@@ -297,12 +300,12 @@ funcs =
 
 		pg.query "WITH phase as (SELECT id FROM phases WHERE name='#{data.phase_name}') UPDATE rooms SET phase_id=phase.id FROM phase WHERE rooms.id=#{data.room_id};", ->
 			console.log "Phase changed to '#{data.phase_name}' in room ID #{data.room_id}"
-			io.to(data.room_id).emit EVENTS['phase changed'], JSON.stringify
-				phase_name: data.phase_name
 
 			switch data.phase_name
 
 				when 'night begin'
+					io.to(data.room_id).emit EVENTS['phase changed'], JSON.stringify
+						phase_name: 'night begin'
 					pg.query "UPDATE rooms SET votes=0 WHERE id=#{data.room_id};", ->
 						setTimeout ->
 							funcs['change phase'] socket,
@@ -311,7 +314,7 @@ funcs =
 						, 1000
 
 				when 'mafia begin'
-					pg.query "WITH mafia_role AS (SELECT id FROM roles WHERE name='mafia') SELECT * FROM players, mafia_role WHERE room_id=#{data.room_id} AND role_id=mafia_role.id;", (result)->
+					pg.query "WITH mafia_role AS (SELECT id FROM roles WHERE name='mafia') SELECT players.* FROM players, mafia_role WHERE room_id=#{data.room_id} AND role_id=mafia_role.id;", (result)->
 						mafia_players = result.rows
 						for cur, i in mafia_players
 							mafia_players[i].socket = io.sockets.connected[cur.socket_id]
@@ -319,6 +322,14 @@ funcs =
 							non_mafia_players = result.rows
 							for cur, i in non_mafia_players
 								non_mafia_players[i].socket = io.sockets.connected[cur.socket_id]
+
+								for mafia_player in mafia_players
+									console.log "emitting 'mafia begin' to #{mafia_player.nickname}"
+									mafia_player.socket.emit EVENTS['phase changed'], JSON.stringify
+										phase_name: 'mafia begin'
+										players: non_mafia_players.map (cur)->
+											id: cur.id
+											nickname: cur.nickname
 						
 
 

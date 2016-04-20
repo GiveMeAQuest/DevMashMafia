@@ -123,36 +123,37 @@ describe 'socket events', ->
 			socket2.removeAllListeners EVENTS['err']
 			done()
 
-	it 'should start the game and receive roles (1)', ->
+	it 'should start the game and receive roles (1)', =>
 
-		q1 = new Promise (resolve, reject)->
+		q1 = new Promise (resolve, reject)=>
 
-			socket.on EVENTS['role'], (data)->
+			socket.on EVENTS['role'], (data)=>
 				socket.removeAllListeners EVENTS['role']
 				data = JSON.parse data
 
 				data.should.have.property 'name'
 				console.log 'player 1 is', data.name
+				@player.role = data.name
 				resolve()
 
-		q2 = new Promise (resolve, reject)->
+		q2 = new Promise (resolve, reject)=>
 
-			socket2.on EVENTS['role'], (data)->
+			socket2.on EVENTS['role'], (data)=>
 				socket2.removeAllListeners EVENTS['role']
 				data = JSON.parse data
 
 				data.should.have.property 'name'
 				console.log 'player 2 is', data.name
+				@player2.role = data.name
 				resolve()
 
 		socket.emit EVENTS['start game']
 
 		Promise.all [q1, q2]
 
-	it 'should receive "night begin" event', ->
+	it 'should receive "night begin" event', =>
 
-		q1 = new Promise (resolve, reject)->
-
+		q1 = new Promise (resolve, reject)=>
 			socket.on EVENTS['phase changed'], (data)->
 				socket.removeAllListeners EVENTS['phase changed']
 				data = JSON.parse data
@@ -162,7 +163,6 @@ describe 'socket events', ->
 				resolve()
 
 		q2 = new Promise (resolve, reject)->
-
 			socket2.on EVENTS['phase changed'], (data)->
 				socket2.removeAllListeners EVENTS['phase changed']
 				data = JSON.parse data
@@ -173,26 +173,32 @@ describe 'socket events', ->
 
 		Promise.all [q1, q2]
 
-	it 'should receive "mafia begin" event', ->
+	it 'should receive "mafia begin" event', =>
 
-		q1 = new Promise (resolve, reject)->
+		q1 = new Promise (resolve, reject)=>
+			if (@player.role == 'mafia')
+				socket.on EVENTS['phase changed'], (data)->
+					socket.removeAllListeners EVENTS['phase changed']
+					data = JSON.parse data
 
-			socket.on EVENTS['phase changed'], (data)->
-				socket.removeAllListeners EVENTS['phase changed']
-				data = JSON.parse data
-
-				data.should.have.property 'phase_name'
-				data.phase_name.should.be.exactly 'mafia begin'
+					data.should.have.properties ['phase_name', 'players']
+					data.phase_name.should.be.exactly 'mafia begin'
+					data.players.length.should.be.exactly 1
+					resolve()
+			else
 				resolve()
 
-		q2 = new Promise (resolve, reject)->
+		q2 = new Promise (resolve, reject)=>
+			if (@player2.role == 'mafia')
+				socket2.on EVENTS['phase changed'], (data)->
+					socket2.removeAllListeners EVENTS['phase changed']
+					data = JSON.parse data
 
-			socket2.on EVENTS['phase changed'], (data)->
-				socket2.removeAllListeners EVENTS['phase changed']
-				data = JSON.parse data
-
-				data.should.have.property 'phase_name'
-				data.phase_name.should.be.exactly 'mafia begin'
+					data.should.have.properties ['phase_name', 'players']
+					data.phase_name.should.be.exactly 'mafia begin'
+					data.players.length.should.be.exactly 1
+					resolve()
+			else
 				resolve()
 
 		Promise.all [q1, q2]
