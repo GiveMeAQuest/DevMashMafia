@@ -190,4 +190,4 @@ __Ответ сервера__
   - `players`: [player]
     - `player`: {id, nickname}
       - `id`: ID игрока (число)
-      - `nickname`: Ник игрока (число)
+      - `nickname`: Ник игрока (строка)
