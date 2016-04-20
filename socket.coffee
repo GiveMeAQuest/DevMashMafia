@@ -264,11 +264,17 @@ funcs =
 					for role in result.rows
 						roles[role.name] = role
 
-					players[0].role = roles.mafia
+					for player, i in players
+						if player.nickname is '1'
+							players[i].role = roles.mafia
+						else
+							players[i].role = roles.citizen
+
+					###players[0].role = roles.mafia
 					if players.length >= 2
 						players[1].role = roles.citizen
 					if players.length >= 3
-						players[2].role = roles.citizen
+						players[2].role = roles.citizen###
 
 					for cur_player in players
 						i = findPlayer cur_player.socket.id
@@ -284,14 +290,30 @@ funcs =
 
 	'mafia vote': (socket, data)->
 		if typeof data is 'string' then data = JSON.parse data
+
+		if isNaN data.id
+			console.log 'Error: invalid player ID'
+			socket.emit EVENTS['err'], JSON.stringify
+				event: 'mafia vote'
+				error: 'Invalid player ID'
+			return
+
 		i = findPlayer socket.id
 		player = PLAYERS[i]
-		pg.query "UPDATE rooms SET votes=votes+1 WHERE id=#{player.room_id};", ->
-			voted_i = findPlayer data.id
-			voted_player = PLAYERS[voted_i]
-			console.log "Player #{player.name} voted for #{voted_player.name}"
-			++voted_player.votes
+		if player.role.name isnt 'mafia'
+			console.log "Player #{player.nickname} isn't mafia!"
+			socket.emit EVENTS['err'], JSON.stringify
+				event: 'mafia vote'
+				error: 'You are not mafia'
+			return
 
+		pg.query "UPDATE players SET votes=votes+1 WHERE id=#{data.id};", ->
+			pg.query "SELECT SUM(votes) FROM players WHERE room_id=#{player.room_id};", (result)->
+				total_votes = result.rows[0].sum
+
+
+			console.log "Player #{player.name} voted for #{voted_player.name}"
+			
 
 	'change phase': (socket, data)->
 
@@ -306,7 +328,7 @@ funcs =
 				when 'night begin'
 					io.to(data.room_id).emit EVENTS['phase changed'], JSON.stringify
 						phase_name: 'night begin'
-					pg.query "UPDATE rooms SET votes=0 WHERE id=#{data.room_id};", ->
+					pg.query "UPDATE players SET votes=0 WHERE room_id=#{data.room_id};", ->
 						setTimeout ->
 							funcs['change phase'] socket,
 								room_id: data.room_id
@@ -331,10 +353,6 @@ funcs =
 											id: cur.id
 											nickname: cur.nickname
 						
-
-
-
-
 
 	'disconnect': (socket)->
 		ind = findPlayer socket.id

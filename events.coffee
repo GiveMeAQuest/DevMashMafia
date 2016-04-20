@@ -17,6 +17,7 @@ events = [
 	'start game'
 	'phase changed'
 	'role'
+	'mafia vote'
 ]
 
 events_new = {}

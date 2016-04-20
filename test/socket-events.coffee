@@ -176,7 +176,7 @@ describe 'socket events', ->
 	it 'should receive "mafia begin" event', =>
 
 		q1 = new Promise (resolve, reject)=>
-			if (@player.role == 'mafia')
+			if @player.role is 'mafia'
 				socket.on EVENTS['phase changed'], (data)->
 					socket.removeAllListeners EVENTS['phase changed']
 					data = JSON.parse data
@@ -184,12 +184,16 @@ describe 'socket events', ->
 					data.should.have.properties ['phase_name', 'players']
 					data.phase_name.should.be.exactly 'mafia begin'
 					data.players.length.should.be.exactly 1
+					for player in data.players
+						player.should.have.properties ['id', 'nickname']
+						player.id.should.be.Number()
+						player.nickname.should.be.String()
 					resolve()
 			else
 				resolve()
 
 		q2 = new Promise (resolve, reject)=>
-			if (@player2.role == 'mafia')
+			if @player2.role is 'mafia'
 				socket2.on EVENTS['phase changed'], (data)->
 					socket2.removeAllListeners EVENTS['phase changed']
 					data = JSON.parse data
@@ -197,12 +201,24 @@ describe 'socket events', ->
 					data.should.have.properties ['phase_name', 'players']
 					data.phase_name.should.be.exactly 'mafia begin'
 					data.players.length.should.be.exactly 1
+					for player in data.players
+						player.should.have.properties ['id', 'nickname']
+						player.id.should.be.Number()
+						player.nickname.should.be.String()
 					resolve()
 			else
 				resolve()
 
 		Promise.all [q1, q2]
 
+	it 'should vote as mafia', =>
+		if @player.role is 'mafia'
+			cur_socket = socket
+		else
+			cur_socket = socket2
+
+		cur_socket.emit EVENTS['mafia vote'], JSON.stringify
+			id: if @player.role isnt 'mafia' then @player.id else @player2.id
 
 
 	it 'should leave room (1) and pass host to (2)', =>
