@@ -432,6 +432,41 @@ funcs =
 					room_id: player.room_id
 					phase_name: 'doctor end'
 
+	'prostitute vote': (socket, data)->
+		if typeof data is 'string' then data = JSON.parse data
+
+		if isNaN data.id
+			console.log 'prostitute vote: invalid data!'
+			socket.emit EVENTS['err'],
+				event: 'prostitute vote'
+				error: 'Invalid data'
+			return
+
+		i = findPlayer socket.id
+		player = PLAYERS[i]
+
+		if player.role.name isnt 'prostitute'
+			console.log 'prostitute vote: player is not a prostitute!'
+			socket.emit EVENTS['err'],
+				event: 'prostitute vote'
+				error: 'You are not a prostitute'
+
+		pg.query "SELECT nickname FROM players WHERE id=#{data.id};", (result)->
+			if result.rows.length is 0
+				console.log 'prostitute vote: no such player!'
+				socket.emit EVENTS['err'],
+					event: 'prostitute vote'
+					error: 'No such player'
+				return
+
+			alibied_player = result.rows[0]
+
+			console.log 'Prostitute has alibied player #{alibied_player.nickname}'
+			pg.query "UPDATE rooms SET alibied_player_id=#{data.id} WHERE id=#{player.room_id};", ->
+				funcs['change phase']
+					room_id: player.room_id
+					phase_name: 'prostitute end'
+
 	'citizen vote': (socket, data)->
 		if typeof data is 'string' then data = JSON.parse data
 
@@ -573,6 +608,15 @@ funcs =
 							funcs['change phase']
 								room_id: data.room_id
 								phase_name: 'prostitute end'
+						else
+							prostitute = result.rows[0]
+							prostitute.socket = io.sockets.connected[prostitute.socket_id]
+							pg.query "SELECT id, nickname FROM players WHERE room_id=#{data.room_id} AND NOT(id=#{prostitute.id});", (result)->
+								players = result.rows
+								prostitute.socket.emit EVENTS['phase changed'], JSON.stringify
+									phase_name: 'prostitute begin'
+									data:
+										players: players
 
 				when 'prostitute end'
 					setTimeout ->
@@ -595,48 +639,61 @@ funcs =
 							console.log 'Error: room doesn\'t exist'
 							return
 						killed_player = result.rows[0]
-						pg.query "SELECT players.* FROM rooms, players WHERE players.id=rooms.killed_player_id AND players.room_id=#{data.room_id} AND rooms.id=#{data.room_id} AND rooms.killed_player_id=rooms.healed_player_id;", (result)->
-							if result.rows.length isnt 0
-								io.to(data.room_id).emit EVENTS['phase changed'], JSON.stringify
-									phase_name: 'day begin'
-									data:
-										killed_player:
-											id: -1
-								console.log 'Day: mafia hasn\'t killed anyone!'
-								setTimeout ->
-										funcs['change phase']
-											room_id: data.room_id
-											phase_name: 'citizen begin'
-									, 1000
+						pg.query "SELECT players.id, socket_id, nickname FROM players, rooms WHERE rooms.id=#{data.room_id} AND players.id=rooms.alibied_player_id;", (result)->
+							if result.rows.length is 0
+								alibied_player =
+									id: -1
 							else
-								io.to(data.room_id).emit EVENTS['phase changed'], JSON.stringify
-									phase_name: 'day begin'
-									data:
-										killed_player:
-											id: killed_player.id
-											nickname: killed_player.nickname
-								killed_player.socket = io.sockets.connected[killed_player.socket_id]
-								console.log "Day: mafia has killed player #{killed_player.nickname}!"
-
-								pg.query "WITH mafia_role AS (SELECT id FROM roles WHERE name='mafia') SELECT players.id FROM players, mafia_role WHERE players.room_id=#{data.room_id} AND NOT(players.role_id=mafia_role.id) AND players.state=1;", (result)->
-									if result.rows.length is 0
-										console.log 'Mafia won!'
-										io.to(data.room_id).emit EVENTS['end game'],
-											winner: 'mafia'
-										return
-
-									killed_player.socket.emit EVENTS['killed']
-									funcs['leave room'] killed_player.socket
-
+								alibied_player = result.rows[0]
+							pg.query "SELECT players.* FROM rooms, players WHERE players.id=rooms.killed_player_id AND players.room_id=#{data.room_id} AND rooms.id=#{data.room_id} AND rooms.killed_player_id=rooms.healed_player_id;", (result)->
+								if result.rows.length isnt 0
+									data =
+									io.to(data.room_id).emit EVENTS['phase changed'], JSON.stringify
+										phase_name: 'day begin'
+										data:
+											killed_player:
+												id: -1
+											alibied_player:
+												id: alibied_player.id
+												nickname: if alibied_player.id is -1 then '' else alibied_player.nickname
+									console.log 'Day: mafia hasn\'t killed anyone!'
 									setTimeout ->
-										funcs['change phase']
-											room_id: data.room_id
-											phase_name: 'citizen begin'
-									, 1000
+											funcs['change phase']
+												room_id: data.room_id
+												phase_name: 'citizen begin'
+										, 1000
+								else
+									io.to(data.room_id).emit EVENTS['phase changed'], JSON.stringify
+										phase_name: 'day begin'
+										data:
+											killed_player:
+												id: killed_player.id
+												nickname: killed_player.nickname
+											alibied_player:
+												id: alibied_player.id
+												nickname: if alibied_player.id is -1 then '' else alibied_player.nickname
+									killed_player.socket = io.sockets.connected[killed_player.socket_id]
+									console.log "Day: mafia has killed player #{killed_player.nickname}!"
+
+									pg.query "WITH mafia_role AS (SELECT id FROM roles WHERE name='mafia') SELECT players.id FROM players, mafia_role WHERE players.room_id=#{data.room_id} AND NOT(players.role_id=mafia_role.id) AND players.state=1;", (result)->
+										if result.rows.length is 0
+											console.log 'Mafia won!'
+											io.to(data.room_id).emit EVENTS['end game'],
+												winner: 'mafia'
+											return
+
+										killed_player.socket.emit EVENTS['killed']
+										funcs['leave room'] killed_player.socket
+
+										setTimeout ->
+											funcs['change phase']
+												room_id: data.room_id
+												phase_name: 'citizen begin'
+										, 1000
 
 				when 'citizen begin'
 					pg.query "UPDATE players SET votes=0 WHERE room_id=#{data.room_id};", ->
-						pg.query "SELECT id, nickname FROM players WHERE room_id=#{data.room_id};", (result)->
+						pg.query "SELECT players.id, players.nickname FROM players, rooms WHERE rooms.id=#{data.room_id} AND players.room_id=#{data.room_id} AND NOT(players.id=rooms.alibied_player_id);", (result)->
 							players = result.rows
 							io.to(data.room_id).emit EVENTS['phase changed'], JSON.stringify
 								phase_name: 'citizen begin'
