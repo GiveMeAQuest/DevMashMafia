@@ -77,7 +77,7 @@ funcs =
 					error: 'Invalid data!'
 				return
 
-		if (!data.reconnect_token?) and (isNaN data.room_id or !data.nickname?)
+		if (!data.reconnect_token?) and (isNaN data.room_id or !data.nickname? or data.room_id > 1e9 or data.nickname.length > 20)
 			console.log 'join room: invalid data!'
 			socket.emit EVENTS['err'], JSON.stringify
 				event: 'join room'
