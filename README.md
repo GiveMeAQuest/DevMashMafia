@@ -10,6 +10,7 @@
 - [Начало игры](#start-game)
 - [Голосование мафии](#mafia-vote)
 - [Голосование шерифа](#sheriff-vote)
+- [Голосование жителей](#citizen-vote)
 
 #####События, отправляемые сервером пользователю
 - [Любая ошибка](#err)
@@ -19,6 +20,8 @@
 - [Назначение игроку роли](#role)
 - [Смена фазы игры в комнате игрока](#phase-changed)
 - [Игрок был убит мафией](#killed)
+- [Игрок был арестован жителями](#arrested)
+- [Игра окончена](#end-game)
 
 #####Фазы игры
 - [night begin](#night-begin)
@@ -26,6 +29,8 @@
 - [sheriff begin](#sheriff-begin)
 - [night end](#night-end)
 - [day begin](#day-begin)
+- [citizen begin](#citizen-begin)
+- [citizen end](#citizen-end)
 
 
 ##Условные обозначения
@@ -152,6 +157,13 @@ __Ответ сервера__
     - `nickname`: Ник игрока (строка)
     - `is_mafia`: true/false (булеан)
 
+---
+
+<a name='citizen-vote'></a>
+####Голосование жителей
+- `event`: "citizen vote"
+- `data`: {id}
+  - `id`: ID игрока, за которого проголосовали жители
 
 ###События, отправляемые сервером пользователю
 
@@ -215,6 +227,21 @@ __Ответ сервера__
 - `event`: "killed"
 - `data`: -
 
+---
+
+<a name='arrested'></a>
+####Игрок был арестован жителями
+- `event`: "arrested"
+- `data`: -
+
+---
+
+<a name='end-game'></a>
+####Игра окончена
+- `event`: "end game"
+- `data`: {winner}
+  - `winner`: "mafia"/"citizen" (строка)
+
 <a name='phases'></a>
 ### Фазы игры
 
@@ -258,3 +285,23 @@ __Ответ сервера__
   - `killed_player`: {id, nickname}
     - `id`: ID убитого игрока (число) или -1, если никто не был убит
     - `nickname`: Ник убитого игрока (если кто-то был убит) (строка)
+
+---
+
+<a name='citizen-begin'></a>
+###citizen begin
+Голосовать можно за всех, кроме игрока с алиби
+- `data`: {players}
+  - `players`: [player]
+    - `player`: {id, nickname}
+      - `id`: ID игрока (число)
+      - `nickname`: Ник игрока (строка)
+
+---
+
+<a name='citizen-end'></a>
+###citizen end
+- `data`: {arrested_player}
+  - `arrested_player`: {id, nickname}
+    - `id`: ID арестованого игрока (число)
+    - `nickname`: Ник арестованого игрока (строка)
