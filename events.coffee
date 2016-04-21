@@ -18,7 +18,6 @@ events_list = [
 	'phase changed'
 	'role'
 	'mafia vote'
-	'sheriff begin'
 	'sheriff vote'
 	'sheriff info'
 	'killed'

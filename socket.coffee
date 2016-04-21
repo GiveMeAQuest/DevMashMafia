@@ -396,6 +396,46 @@ funcs =
 				funcs['change phase']
 					room_id: player.room_id
 					phase_name: 'sheriff end'
+
+	'citizen vote': (socket, data)->
+		if typeof data is 'string' then data = JSON.parse data
+
+		if isNaN data.id
+			console.log 'Error: invalid player ID'
+			socket.emit EVENTS['err'], JSON.stringify
+				event: 'mafia vote'
+				error: 'Invalid player ID'
+			return
+
+		i = findPlayer socket.id
+		player = PLAYERS[i]
+
+		pg.query "SELECT nickname FROM players WHERE id=#{data.id};", (result)->
+			console.log "Player #{player.nickname} voted for #{result.rows[0].nickname}"
+
+		pg.query "UPDATE players SET votes=votes+1 WHERE id=#{data.id};", ->
+			pg.query "SELECT SUM(votes) FROM players WHERE room_id=#{player.room_id};", (result)->
+				total_votes = result.rows[0].sum
+				pg.query "WITH mafia_role AS (SELECT id FROM roles WHERE name='mafia') SELECT COUNT(players.*) FROM players, mafia_role WHERE room_id=#{player.room_id} AND NOT(role_id=mafia_role.id);", (result)->
+					total_players = result.rows[0].count
+
+					if total_votes is total_players
+						pg.query "SELECT id, socket_id, nickname, votes FROM players WHERE room_id=#{player.room_id} ORDER BY votes DESC;", (result)->
+							players = result.rows
+							if players.length > 1 and players[0].votes is players[1].votes
+								console.log 'Mafia will vote again'
+								funcs['change phase']
+									phase_name: 'mafia vote'
+							else
+								killed_player = result.rows[0]
+								i = findPlayer killed_player.socket_id
+								PLAYERS[i].state = 0
+								pg.query "UPDATE players SET state=0 WHERE id=#{killed_player.id};", ->
+									pg.query "UPDATE rooms SET killed_player_id=#{killed_player.id} WHERE id=#{player.room_id};", ->
+										console.log "Mafia killed player #{killed_player.nickname}"
+										funcs['change phase']
+											room_id: player.room_id
+											phase_name: 'mafia end'	
 			
 
 	'change phase': (data)->
@@ -455,7 +495,8 @@ funcs =
 							sheriff.socket = io.sockets.connected[sheriff.socket_id]
 							pg.query "SELECT id, nickname FROM players WHERE room_id=#{data.room_id} AND NOT(id=#{sheriff.id});", (result)->
 								players = result.rows
-								sheriff.socket.emit EVENTS['sheriff begin'], JSON.stringify
+								sheriff.socket.emit EVENTS['phase changed'], JSON.stringify
+									phase_name: 'sheriff begin'
 									data: players
 
 
@@ -567,7 +608,7 @@ module.exports = (server)->
 
 		$emit = socket.emit
 		socket.emit = (event, data)->
-			console.log 'EMITIM EBAT', event,'V ROT K', socket.id, 'S DATOY', data
+			console.log 'EMITIM EBAT "', (Object.keys(EVENTS)[event] or event), '" V ROT K', socket.id, 'S DATOY', data
 			$emit.apply @, Array.prototype.slice.call arguments
 
 		console.log 'new socket connection'
