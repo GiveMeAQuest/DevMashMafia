@@ -10,6 +10,8 @@
 - [Начало игры](#start-game)
 - [Голосование мафии](#mafia-vote)
 - [Голосование шерифа](#sheriff-vote)
+- [Голосование доктора](#doctor-vote)
+- [Голосование проститутки](#prostitute-vote)
 - [Голосование жителей](#citizen-vote)
 
 #####События, отправляемые сервером пользователю
@@ -27,6 +29,8 @@
 - [night begin](#night-begin)
 - [mafia begin](#mafia-begin)
 - [sheriff begin](#sheriff-begin)
+- [doctor begin](#doctor-begin)
+- [prostitute begin](#prostitute-begin)
 - [night end](#night-end)
 - [day begin](#day-begin)
 - [citizen begin](#citizen-begin)
@@ -159,6 +163,22 @@ __Ответ сервера__
 
 ---
 
+<a name='doctor-vote'></a>
+####Голосование доктора
+- `event`: "doctor vote"
+- `data`: {id}
+  - `id`: ID игрока, за которого проголосовал доктор
+
+---
+
+<a name='prostitute-vote'></a>
+####Голосование проститутки
+- `event`: "prostitute vote"
+- `data`: {id}
+  - `id`: ID игрока, за которого проголосовала проститутка
+
+---
+
 <a name='citizen-vote'></a>
 ####Голосование жителей
 - `event`: "citizen vote"
@@ -265,6 +285,28 @@ __Ответ сервера__
 <a name='sheriff-begin'></a>
 ###sheriff begin
 Отправляется только шерифу
+- `data`: {players}
+  - `players`: [player]
+    - `player`: {id, nickname}
+      - `id`: ID игрока (число)
+      - `nickname`: Ник игрока (строка)
+
+---
+
+<a name='doctor-begin'></a>
+###doctor begin
+Отправляется только доктору
+- `data`: {players}
+  - `players`: [player]
+    - `player`: {id, nickname}
+      - `id`: ID игрока (число)
+      - `nickname`: Ник игрока (строка)
+
+---
+
+<a name='prostitute-begin'></a>
+###prostitute begin
+Отправляется только проститутке
 - `data`: {players}
   - `players`: [player]
     - `player`: {id, nickname}
