@@ -181,10 +181,11 @@ describe 'socket events', ->
 					socket.removeAllListeners EVENTS['phase changed']
 					data = JSON.parse data
 
-					data.should.have.properties ['phase_name', 'players']
+					data.should.have.properties ['phase_name', 'data']
 					data.phase_name.should.be.exactly 'mafia begin'
-					data.players.length.should.be.exactly 1
-					for player in data.players
+					data.data.should.have.property 'players'
+					data.data.players.length.should.be.exactly 1
+					for player in data.data.players
 						player.should.have.properties ['id', 'nickname']
 						player.id.should.be.Number()
 						player.nickname.should.be.String()

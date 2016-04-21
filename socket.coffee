@@ -498,7 +498,8 @@ funcs =
 								players = result.rows
 								sheriff.socket.emit EVENTS['phase changed'], JSON.stringify
 									phase_name: 'sheriff begin'
-									data: players
+									data:
+										players: players
 
 
 				when 'sheriff end'
