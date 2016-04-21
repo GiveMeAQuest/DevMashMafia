@@ -440,7 +440,9 @@ funcs =
 
 	'change phase': (data)->
 
-		pg.query "WITH phase as (SELECT id FROM phases WHERE name='#{data.phase_name}') UPDATE rooms SET phase_id=phase.id FROM phase WHERE rooms.id=#{data.room_id} RETURNING rooms.id;", (result)->
+		q = "WITH phase as (SELECT id FROM phases WHERE name='#{data.phase_name}') UPDATE rooms SET phase_id=phase.id FROM phase WHERE rooms.id=#{data.room_id} RETURNING rooms.id;"
+		console.log q
+		pg.query q, (result)->
 			if result.rows.length is 0
 				console.log 'Error: room was deleted'
 				return
