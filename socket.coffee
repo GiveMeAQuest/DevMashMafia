@@ -663,7 +663,7 @@ funcs =
 									winner: 'citizen'
 								return
 
-							pg.query "WITH mafia_role AS (SELECT id FROM roles WHERE name='mafia') SELECT players.id FROM players, mafia_role WHERE players.room_id=#{data.room_id} AND NOT(players.role_id=mafia_role.id) AND players.state=1;"
+							pg.query "WITH mafia_role AS (SELECT id FROM roles WHERE name='mafia') SELECT players.id FROM players, mafia_role WHERE players.room_id=#{data.room_id} AND NOT(players.role_id=mafia_role.id) AND players.state=1;", (result)->
 								if result.rows.length is 0
 									console.log 'Mafia won!'
 									io.to(data.room_id).emit EVENTS['end game'],
