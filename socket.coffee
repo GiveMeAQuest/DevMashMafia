@@ -618,7 +618,7 @@ funcs =
 								killed_player.socket = io.sockets.connected[killed_player.socket_id]
 								killed_player.socket.emit EVENTS['killed']
 								funcs['leave room'] killed_player.socket
-								console.log "Day: mafia has killed player #{result.rows[0].nickname}!"
+								console.log "Day: mafia has killed player #{killed_player.nickname}!"
 
 								pg.query "WITH mafia_role AS (SELECT id FROM roles WHERE name='mafia') SELECT players.id FROM players, mafia_role WHERE NOT(players.role_id=mafia_role.id) AND players.state=1;", (result)->
 									if result.rows.length is 0
@@ -692,7 +692,7 @@ module.exports = (server)->
 
 		$emit = socket.emit
 		socket.emit = (event, data)->
-			console.log 'EMITIM EBAT "', (Object.keys(EVENTS)[event] or event), '" V ROT K', socket.id, 'S DATOY', data
+			#console.log 'EMITIM EBAT "', (Object.keys(EVENTS)[event] or event), '" V ROT K', socket.id, 'S DATOY', data
 			$emit.apply @, Array.prototype.slice.call arguments
 
 		console.log 'new socket connection'
