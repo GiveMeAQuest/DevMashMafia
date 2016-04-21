@@ -5,7 +5,7 @@ pg.defaults.ssl = true
 module.exports =
 
 	query: (query, cb)->
-		pg.connect process.env.DATABASE_URL, (err, client, done)->
+		pg.connect 'postgres://phiyolxqlfoajb:qQ_7ulpwRpzFy71fazVzr6XO2q@ec2-54-235-199-36.compute-1.amazonaws.com:5432/d7mks99df261gc' or process.env.DATABASE_URL, (err, client, done)->
 			if err then throw err
 			client.query query, (err, result)->
 				if err
