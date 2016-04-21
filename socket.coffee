@@ -501,7 +501,7 @@ funcs =
 					, 1000
 
 				when 'day begin'
-					pg.query "SELECT id, socket_id, nickname FROM players, rooms WHERE rooms.id=#{data.room_id} AND players.id=rooms.killed_player_id;", (result)->
+					pg.query "SELECT players.id, socket_id, nickname FROM players, rooms WHERE rooms.id=#{data.room_id} AND players.id=rooms.killed_player_id;", (result)->
 						if result.rows.length is 0
 							console.log 'Error: room doesn\'t exist'
 							return
@@ -510,14 +510,19 @@ funcs =
 							phase_name: 'day begin'
 							data:
 								killed_player:
-									id: result.rows[0].id
-									nickname: result.rows[0].nickname
+									id: killed_player.id
+									nickname: killed_player.nickname
 						killed_player.socket = io.sockets.connected[killed_player.socket_id]
 						killed_player.socket.emit EVENTS['killed']
-						pg.query "DELETE FROM players WHERE id=#{killed_player.id};", ->
-							console.log "Day: mafia has killed player #{result.rows[0].nickname}!"
+						funcs['leave room'] killed_player.socket
+						console.log "Day: mafia has killed player #{result.rows[0].nickname}!"
 
-							pg.query "SELECT COUNT(*) "
+						pg.query "WITH mafia_role AS (SELECT id FROM roles WHERE name='mafia') SELECT players.id FROM players, mafia_role WHERE NOT(players.role_id=mafia_role.id) AND players.state=1;", (result)->
+							if result.rows.length is 0
+								console.log 'Mafia won!'
+								io.to(data.room_id).emit EVENTS['end game'],
+									winner: 'mafia'
+								return
 
 							setTimeout ->
 								funcs['change phase']

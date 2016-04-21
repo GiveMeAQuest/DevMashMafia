@@ -21,6 +21,7 @@ events_list = [
 	'sheriff vote'
 	'sheriff info'
 	'killed'
+	'end game'
 ]
 
 events = {}
