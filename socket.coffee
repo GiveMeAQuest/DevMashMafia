@@ -416,7 +416,7 @@ funcs =
 				event: 'doctor vote'
 				error: 'You are not a doctor'
 
-		pg.query "SELECT nickname FROM players WHERE id=#{data.id};", ->
+		pg.query "SELECT nickname FROM players WHERE id=#{data.id};", (result)->
 			if result.rows.length is 0
 				console.log 'doctor vote: no such player!'
 				socket.emit EVENTS['err'],
