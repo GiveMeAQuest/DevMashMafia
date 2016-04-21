@@ -177,7 +177,7 @@ funcs =
 					error: 'Invalid data!'
 				return
 
-		if isNaN params.players
+		if isNaN params.players or params.players > 50
 			console.log 'create room: invalid data!'
 			socket.emit EVENTS['err'], JSON.stringify
 				event: 'create room'
