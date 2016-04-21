@@ -476,7 +476,6 @@ funcs =
 	'change phase': (data)->
 
 		q = "WITH phase as (SELECT id FROM phases WHERE name='#{data.phase_name}') UPDATE rooms SET phase_id=phase.id FROM phase WHERE rooms.id=#{data.room_id} RETURNING rooms.id;"
-		console.log q
 		pg.query q, (result)->
 			if result.rows.length is 0
 				console.log 'Error: room was deleted'
@@ -620,7 +619,7 @@ funcs =
 								funcs['leave room'] killed_player.socket
 								console.log "Day: mafia has killed player #{killed_player.nickname}!"
 
-								pg.query "WITH mafia_role AS (SELECT id FROM roles WHERE name='mafia') SELECT players.id FROM players, mafia_role WHERE NOT(players.role_id=mafia_role.id) AND players.state=1;", (result)->
+								pg.query "WITH mafia_role AS (SELECT id FROM roles WHERE name='mafia') SELECT players.id FROM players, mafia_role WHERE players.room_id=#{data.room_id} AND NOT(players.role_id=mafia_role.id) AND players.state=1;", (result)->
 									if result.rows.length is 0
 										console.log 'Mafia won!'
 										io.to(data.room_id).emit EVENTS['end game'],
@@ -656,7 +655,8 @@ funcs =
 								arrested_player:
 									id: arrested_player.id
 									nickname: arrested_player.nickname
-						pg.query "WITH mafia_role AS (SELECT id FROM roles WHERE name='mafia') SELECT players.id FROM players, mafia_role WHERE players.role_id=mafia_role.id AND players.state=1;", (result)->
+						pg.query "WITH mafia_role AS (SELECT id FROM roles WHERE name='mafia') SELECT players.id FROM players, mafia_role WHERE players.room_id=#{data.room_id} AND players.role_id=mafia_role.id AND players.state=1;", (result)->
+							console.log 'MAFIA ALIVE:', result.rows
 							if result.rows.length is 0
 								console.log 'Citizen won!'
 								io.to(data.room_id).emit EVENTS['end game'],
