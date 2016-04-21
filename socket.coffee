@@ -554,7 +554,7 @@ funcs =
 						else
 							doctor = result.rows[0]
 							doctor.socket = io.sockets.connected[doctor.socket_id]
-							pg.query "SELECT id, nickname FROM players WHERE room_id=#{data.room_id} AND NOT(id=#{doctor.id});", (result)->
+							pg.query "SELECT id, nickname FROM players WHERE room_id=#{data.room_id};", (result)->
 								players = result.rows
 								doctor.socket.emit EVENTS['phase changed'], JSON.stringify
 									phase_name: 'doctor begin'
