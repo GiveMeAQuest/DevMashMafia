@@ -147,7 +147,10 @@ __Ответ сервера__
 
 - `event`: "sheriff info"
 - `data`: {player}
-  - `player`: ID игрока (число)
+  - `player`: {id, nickname, is_mafia}
+    - `id`: ID игрока (число)
+    - `nickname`: Ник игрока (строка)
+    - `is_mafia`: true/false (булеан)
 
 
 ###События, отправляемые сервером пользователю
