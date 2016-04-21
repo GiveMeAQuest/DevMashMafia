@@ -634,12 +634,13 @@ funcs =
 									, 1000
 
 				when 'citizen begin'
-					pg.query "SELECT id, nickname FROM players WHERE room_id=#{data.room_id};", (result)->
-						players = result.rows
-						io.to(data.room_id).emit EVENTS['phase changed'], JSON.stringify
-							phase_name: 'citizen begin'
-							data:
-								players: players
+					pg.query "UPDATE players SET votes=0 WHERE room_id=#{data.room_id};", ->
+						pg.query "SELECT id, nickname FROM players WHERE room_id=#{data.room_id};", (result)->
+							players = result.rows
+							io.to(data.room_id).emit EVENTS['phase changed'], JSON.stringify
+								phase_name: 'citizen begin'
+								data:
+									players: players
 
 				when 'citizen end'
 					pg.query "SELECT players.id, players.nickname, players.socket_id FROM rooms, players WHERE rooms.id=#{data.room_id} AND players.id=rooms.arrested_player_id;", (result)->
