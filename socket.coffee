@@ -84,6 +84,13 @@ funcs =
 				error: 'Invalid data!'
 			return
 
+		if (data.nickname.indexOf("'") isnt -1)
+			console.log 'join room: invalid nickname!'
+			socket.emit EVENTS['err'], JSON.stringify
+				event: 'join room'
+				error: 'Nickname can\'t contain quotes'
+			return
+
 		console.log "join room with nickname #{data.nickname} to room ID #{data.room_id}"
 		pg.query "SELECT * FROM rooms WHERE id=#{data.room_id};", (result)->
 			if result.rows.length is 0
