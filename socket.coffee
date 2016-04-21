@@ -616,8 +616,6 @@ funcs =
 											id: killed_player.id
 											nickname: killed_player.nickname
 								killed_player.socket = io.sockets.connected[killed_player.socket_id]
-								killed_player.socket.emit EVENTS['killed']
-								funcs['leave room'] killed_player.socket
 								console.log "Day: mafia has killed player #{killed_player.nickname}!"
 
 								pg.query "WITH mafia_role AS (SELECT id FROM roles WHERE name='mafia') SELECT players.id FROM players, mafia_role WHERE players.room_id=#{data.room_id} AND NOT(players.role_id=mafia_role.id) AND players.state=1;", (result)->
@@ -626,6 +624,9 @@ funcs =
 										io.to(data.room_id).emit EVENTS['end game'],
 											winner: 'mafia'
 										return
+
+									killed_player.socket.emit EVENTS['killed']
+									funcs['leave room'] killed_player.socket
 
 									setTimeout ->
 										funcs['change phase']
@@ -649,8 +650,6 @@ funcs =
 							return
 						arrested_player = result.rows[0]
 						arrested_player.socket = io.sockets.connected[arrested_player.socket_id]
-						arrested_player.socket.emit EVENTS['arrested']
-						funcs['leave room'] arrested_player.socket
 						console.log "Citizen arrested player #{arrested_player.nickname}!"
 						io.to(data.room_id).emit EVENTS['phase changed'], JSON.stringify
 							phase_name: 'citizen end'
@@ -671,6 +670,9 @@ funcs =
 									io.to(data.room_id).emit EVENTS['end game'],
 										winner: 'mafia'
 									return
+
+								arrested_player.socket.emit EVENTS['arrested']
+								funcs['leave room'] arrested_player.socket
 
 								setTimeout ->
 									funcs['change phase']
