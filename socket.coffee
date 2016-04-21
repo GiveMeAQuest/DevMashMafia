@@ -375,17 +375,15 @@ funcs =
 							for cur, i in non_mafia_players
 								non_mafia_players[i].socket = io.sockets.connected[cur.socket_id]
 
-								for mafia_player in mafia_players
-									console.log "emitting 'mafia begin' to #{mafia_player.nickname}"
-									mafia_player.socket.emit EVENTS['phase changed'], JSON.stringify
-										phase_name: 'mafia begin'
-										players: non_mafia_players.map (cur)->
-											id: cur.id
-											nickname: cur.nickname
+							for mafia_player in mafia_players
+								console.log "emitting 'mafia begin' to #{mafia_player.nickname}"
+								mafia_player.socket.emit EVENTS['phase changed'], JSON.stringify
+									phase_name: 'mafia begin'
+									players: non_mafia_players.map (cur)->
+										id: cur.id
+										nickname: cur.nickname
 
 				when 'mafia end'
-					###io.to(data.room_id).emit EVENTS['phase changed'], JSON.stringify
-						phase_name: 'mafia end'###
 					pg.query "UPDATE players SET votes=0 WHERE room_id=#{data.room_id};", ->
 						setTimeout ->
 							funcs['change phase']

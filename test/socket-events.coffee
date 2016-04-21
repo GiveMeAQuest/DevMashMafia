@@ -8,7 +8,7 @@ socket2 = require('socket.io-client') HOST
 
 describe 'socket events', ->
 	@slow 4000
-	@timeout 5000
+	@timeout 20000
 
 	@room_id = @player = @player2 = EVENTS = null
 
