@@ -9,6 +9,7 @@
 - [Возобновление игровой сесии](#reconnect)
 - [Начало игры](#start-game)
 - [Голосование мафии](#mafia-vote)
+- [Голосование шерифа](#sheriff-vote)
 
 #####События, отправляемые сервером пользователю
 - [Любая ошибка](#err)
@@ -21,6 +22,7 @@
 #####Фазы игры
 - [night begin](#night-begin)
 - [mafia begin](#mafia-begin)
+- [sheriff begin](#sheriff-begin)
 - [night end](#night-end)
 - [day begin](#day-begin)
 
@@ -132,6 +134,14 @@ __Ответ сервера__
 - `data`: {id}
   - `id`: ID игрока, за которого проголосовала мафия
 
+---
+
+<a name='sheriff-vote'></a>
+####Голосование шерифа
+- `event`: "sheriff vote"
+- `data`: {id}
+  - `id`: ID игрока, за которого проголосовал шериф
+
 
 ###События, отправляемые сервером пользователю
 
@@ -200,6 +210,17 @@ __Ответ сервера__
 <a name='mafia-begin'></a>
 ###mafia begin
 Отправляется только мафии
+- `data`: {players}
+  - `players`: [player]
+    - `player`: {id, nickname}
+      - `id`: ID игрока (число)
+      - `nickname`: Ник игрока (строка)
+
+---
+
+<a name='sheriff-begin'></a>
+###sheriff begin
+Отправляется только шерифу
 - `data`: {players}
   - `players`: [player]
     - `player`: {id, nickname}
