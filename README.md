@@ -21,6 +21,7 @@
 - [Смена фазы игры в комнате игрока](#phase-changed)
 - [Игрок был убит мафией](#killed)
 - [Игрок был арестован жителями](#arrested)
+- [Игра окончена](#end-game)
 
 #####Фазы игры
 - [night begin](#night-begin)
@@ -231,6 +232,14 @@ __Ответ сервера__
 ####Игрок был арестован жителями
 - `event`: "arrested"
 - `data`: -
+
+---
+
+<a name='end-game'></a>
+####Игра окончена
+- `event`: "end game"
+- `data`: {winner}
+  - `winner`: "mafia"/"citizen" (строка)
 
 <a name='phases'></a>
 ### Фазы игры
