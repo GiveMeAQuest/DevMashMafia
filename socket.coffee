@@ -397,6 +397,41 @@ funcs =
 					room_id: player.room_id
 					phase_name: 'sheriff end'
 
+	'doctor vote': (socket, data)->
+		if typeof data is 'string' then data = JSON.parse data
+
+		if isNaN data.id
+			console.log 'doctor vote: invalid data!'
+			socket.emit EVENTS['err'],
+				event: 'doctor vote'
+				error: 'Invalid data'
+			return
+
+		i = findPlayer socket.id
+		player = PLAYERS[i]
+
+		if player.role.name isnt 'doctor'
+			console.log 'doctor vote: player is not a doctor!'
+			socket.emit EVENTS['err'],
+				event: 'doctor vote'
+				error: 'You are not a doctor'
+
+		pg.query "SELECT nickname FROM players WHERE id=#{data.id};", ->
+			if result.rows.length is 0
+				console.log 'doctor vote: no such player!'
+				socket.emit EVENTS['err'],
+					event: 'doctor vote'
+					error: 'No such player'
+				return
+
+			healed_player = result.rows[0]
+
+			console.log 'Doctor has healed player #{healed_player.nickname}'
+			pg.query "UPDATE rooms SET healed_player_id=#{data.id} WHERE id=#{player.room_id};", ->
+				funcs['change phase']
+					room_id: player.room_id
+					phase_name: 'doctor end'
+
 	'citizen vote': (socket, data)->
 		if typeof data is 'string' then data = JSON.parse data
 
@@ -431,7 +466,7 @@ funcs =
 								i = findPlayer arrested_player.socket_id
 								PLAYERS[i].state = 0
 								pg.query "UPDATE players SET state=0 WHERE id=#{arrested_player.id};", ->
-									pg.query "UPDATE rooms SET killed_player_id=#{arrested_player.id} WHERE id=#{player.room_id};", ->
+									pg.query "UPDATE rooms SET arrested_player_id=#{arrested_player.id} WHERE id=#{player.room_id};", ->
 										console.log "Citizen arrested player #{arrested_player.nickname}"
 										funcs['change phase']
 											room_id: player.room_id
@@ -516,6 +551,15 @@ funcs =
 							funcs['change phase']
 								room_id: data.room_id
 								phase_name: 'doctor end'
+						else
+							doctor = result.rows[0]
+							doctor.socket = io.sockets.connected[doctor.socket_id]
+							pg.query "SELECT id, nickname FROM players WHERE room_id=#{data.room_id} AND NOT(id=#{doctor.id});", (result)->
+								players = result.rows
+								doctor.socket.emit EVENTS['phase changed'], JSON.stringify
+									phase_name: 'doctor begin'
+									data:
+										players: players
 
 				when 'doctor end'
 					setTimeout ->
@@ -583,11 +627,32 @@ funcs =
 						phase_name: 'citizen end'
 
 				when 'citizen end'
-					io.to(data.room_id).emit EVENTS['phase changed'], JSON.stringify
-						phase_name: 'citizen end'
-					funcs['change phase']
-						room_id: data.room_id
-						phase_name: 'day end'
+					pg.query "SELECT players.id, players.nickname, players.socket_id FROM rooms, players WHERE room.id=#{data.room_id} AND players.id=rooms.arrested_player_id;", (result)->
+						if result.rows.length is 0
+							console.log 'Error in game cycle'
+							return
+						arrested_player = result.rows[0]
+						arrested_player.socket = io.sockets.connected[arrested_player.socket_id]
+						arrested_player.socket.emit EVENTS['arrested']
+						console.log "Citizen arrested player #{arrested_player.nickname}!"
+						io.to(data.room_id).emit EVENTS['phase changed'], JSON.stringify
+							phase_name: 'citizen end'
+							data:
+								arrested_player:
+									id: arrested_player.id
+									nickname: arrested_player.nickname
+						pg.query "WITH mafia_role AS (SELECT id FROM roles WHERE name='mafia') SELECT players.id FROM players, mafia_role WHERE players.role_id=mafia_role.id AND players.state=1;", (result)->
+							if result.rows.length is 0
+								console.log 'Citizen won!'
+								io.to(data.room_id).emit EVENTS['end game'],
+									winner: 'citizen'
+								return
+
+							setTimeout ->
+								funcs['change phase']
+									room_id: data.room_id
+									phase_name: 'day end'
+							, 1000
 
 				when 'day end'
 					io.to(data.room_id).emit EVENTS['phase changed'], JSON.stringify
@@ -643,6 +708,12 @@ module.exports = (server)->
 
 		socket.on EVENTS['sheriff vote'], (data)->
 			funcs['sheriff vote'] socket, data
+
+		socket.on EVENTS['doctor vote'], (data)->
+			funcs['doctor vote'] socket, data
+
+		socket.on EVENTS['citizen vote'], (data)->
+			funcs['citizen vote'] socket, data
 
 		socket.on 'disconnect', ->
 			funcs['disconnect'] socket 
