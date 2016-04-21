@@ -65,6 +65,7 @@ funcs =
 										id: new_host.id
 							else
 								pg.query "DELETE FROM rooms WHERE id=#{room_id};"
+								console.log "Room ID #{room_id} was deleted"
 
 	'join room': (socket, data)->
 		if typeof data is 'string'
@@ -277,10 +278,20 @@ funcs =
 						roles[role.name] = role
 
 					for player, i in players
-						if player.nickname is '1'
+						if player.nickname is 'mafia'
 							players[i].role = roles.mafia
 						else
-							players[i].role = roles.citizen
+							if player.nickname is 'sheriff'
+								players[i].role = roles.sheriff
+							else
+								if player.nickname is 'doctor'
+									players[i].role = roles.doctor
+								else
+									if player.nickname is 'prostitute'
+										players[i].role = roles.prostitute
+									else
+										players[i].role = roles.citizen
+
 
 					###players[0].role = roles.mafia
 					if players.length >= 2
@@ -344,7 +355,42 @@ funcs =
 										console.log "Mafia killed player #{killed_player.nickname}"
 										funcs['change phase']
 											room_id: player.room_id
-											phase_name: 'mafia end'							
+											phase_name: 'mafia end'		
+
+	'sheriff vote': (socket, data)->
+		if typeof data is 'string' then data = JSON.parse data
+
+		if isNaN data.id
+			console.log 'sheriff vote: invalid data!'
+			socket.emit EVENTS['err'],
+				event: 'sheriff vote'
+				error: 'Invalid data'
+			return
+
+		i = findPlayer socket.id
+		player = PLAYERS[i]
+
+		pg.query "WITH player AS (SELECT * FROM players WHERE id=#{data.id}) SELECT player.id, player.nickname, roles.name as role_name FROM roles, player WHERE roles.id=player.role_id;", (result)->
+			if result.rows.length is 0
+				console.log 'sheriff vote: no such player!'
+				socket.emit EVENTS['err'],
+					event: 'sheriff vote'
+					error: 'No such player'
+				return
+
+			player = result.rows[0]
+			player_to_emit =
+				id: player.id
+				nickname: player.nickname
+				is_mafia: player.role_name is 'mafia'
+			console.log 'sheriff info:', player_to_emit
+			socket.emit EVENTS['sheriff info'], JSON.stringify
+				data:
+					player: player_to_emit
+			setTimeout ->
+				funcs['change phase']
+					room_id: player.room_id
+					phase_name: 'sheriff end'
 			
 
 	'change phase': (data)->
@@ -399,6 +445,14 @@ funcs =
 							funcs['change phase']
 								room_id: data.room_id
 								phase_name: 'sheriff end'
+						else
+							sheriff = result.rows[0]
+							sheriff.socket = io.sockets.connected[sheriff.socket_id]
+							pg.query "SELECT id, nickname FROM players WHERE room_id=#{data.room_id} AND NOT(id=#{sheriff.id});", (result)->
+								players = result.rows
+								sheriff.socket.emit EVENTS['sheriff begin'], JSON.stringify
+									data: players
+
 
 				when 'sheriff end'
 					setTimeout ->
@@ -515,6 +569,9 @@ module.exports = (server)->
 
 		socket.on EVENTS['mafia vote'], (data)->
 			funcs['mafia vote'] socket, data
+
+		socket.on EVENTS['sheriff vote'], (data)->
+			funcs['sheriff vote'] socket, data
 
 		socket.on 'disconnect', ->
 			funcs['disconnect'] socket 

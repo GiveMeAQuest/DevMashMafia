@@ -39,7 +39,7 @@ describe 'socket events', ->
 
 		data =
 			room_id: @room_id
-			nickname: '1'
+			nickname: 'mafia'
 
 		socket.emit EVENTS['join room'], JSON.stringify data
 
