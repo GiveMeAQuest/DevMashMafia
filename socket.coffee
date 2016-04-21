@@ -648,6 +648,7 @@ funcs =
 						arrested_player = result.rows[0]
 						arrested_player.socket = io.sockets.connected[arrested_player.socket_id]
 						arrested_player.socket.emit EVENTS['arrested']
+						funcs['leave room'] arrested_player.socket
 						console.log "Citizen arrested player #{arrested_player.nickname}!"
 						io.to(data.room_id).emit EVENTS['phase changed'], JSON.stringify
 							phase_name: 'citizen end'
@@ -656,18 +657,24 @@ funcs =
 									id: arrested_player.id
 									nickname: arrested_player.nickname
 						pg.query "WITH mafia_role AS (SELECT id FROM roles WHERE name='mafia') SELECT players.id FROM players, mafia_role WHERE players.room_id=#{data.room_id} AND players.role_id=mafia_role.id AND players.state=1;", (result)->
-							console.log 'MAFIA ALIVE:', result.rows
 							if result.rows.length is 0
 								console.log 'Citizen won!'
 								io.to(data.room_id).emit EVENTS['end game'],
 									winner: 'citizen'
 								return
 
-							setTimeout ->
-								funcs['change phase']
-									room_id: data.room_id
-									phase_name: 'day end'
-							, 1000
+							pg.query "WITH mafia_role AS (SELECT id FROM roles WHERE name='mafia') SELECT players.id FROM players, mafia_role WHERE players.room_id=#{data.room_id} AND NOT(players.role_id=mafia_role.id) AND players.state=1;"
+								if result.rows.length is 0
+									console.log 'Mafia won!'
+									io.to(data.room_id).emit EVENTS['end game'],
+										winner: 'mafia'
+									return
+
+								setTimeout ->
+									funcs['change phase']
+										room_id: data.room_id
+										phase_name: 'day end'
+								, 1000
 
 				when 'day end'
 					io.to(data.room_id).emit EVENTS['phase changed'], JSON.stringify
