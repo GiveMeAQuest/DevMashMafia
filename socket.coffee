@@ -595,7 +595,7 @@ funcs =
 							console.log 'Error: room doesn\'t exist'
 							return
 						killed_player = result.rows[0]
-						pg.query "SELECT * FROM players WHERE room_id=#{data.room_id} AND killed_player_id=healed_player_id;", (result)->
+						pg.query "SELECT players.* FROM rooms, players WHERE players.id=rooms.killed_player_id AND players.room_id=#{data.room_id} AND rooms.id=#{data.room_id} AND rooms.killed_player_id=rooms.healed_player_id;", (result)->
 							if result.rows.length isnt 0
 								io.to(data.room_id).emit EVENTS['phase changed'], JSON.stringify
 									phase_name: 'day begin'
