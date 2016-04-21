@@ -300,7 +300,7 @@ __Ответ сервера__
 ---
 
 <a name='citizen-end'></a>
-###day begin
+###citizen end
 - `data`: {arrested_player}
   - `arrested_player`: {id, nickname}
     - `id`: ID арестованого игрока (число)
