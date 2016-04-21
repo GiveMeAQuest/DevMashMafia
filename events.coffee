@@ -1,4 +1,4 @@
-events = [
+events_list = [
 	'err'
 	'join room'
 	'room joined'
@@ -19,13 +19,15 @@ events = [
 	'role'
 	'mafia vote'
 	'sheriff vote'
+	'sheriff info'
+	'killed'
 ]
 
-events_new = {}
+events = {}
 
 ind = 0
 
-for event in events
-	events_new[event] = '' + ind++
+for event in events_list
+	events[event] = '' + ind++
 
-module.exports = events_new
+module.exports = events

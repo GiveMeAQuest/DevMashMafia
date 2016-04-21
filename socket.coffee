@@ -391,8 +391,7 @@ funcs =
 				is_mafia: player.role_name is 'mafia'
 			console.log 'sheriff info:', player_to_emit
 			socket.emit EVENTS['sheriff info'], JSON.stringify
-				data:
-					player: player_to_emit
+				player: player_to_emit
 			setTimeout ->
 				funcs['change phase']
 					room_id: player.room_id
@@ -502,19 +501,29 @@ funcs =
 					, 1000
 
 				when 'day begin'
-					pg.query "SELECT nickname FROM players, rooms WHERE rooms.id=#{data.room_id} AND players.id=rooms.killed_player_id;", (result)->
+					pg.query "SELECT id, socket_id, nickname FROM players, rooms WHERE rooms.id=#{data.room_id} AND players.id=rooms.killed_player_id;", (result)->
+						if result.rows.length is 0
+							console.log 'Error: room doesn\'t exist'
+							return
+						killed_player = result.rows[0]
 						io.to(data.room_id).emit EVENTS['phase changed'], JSON.stringify
 							phase_name: 'day begin'
 							data:
 								killed_player:
 									id: result.rows[0].id
 									nickname: result.rows[0].nickname
-						console.log "Day: mafia has killed player #{result.rows[0].nickname}!"
-						setTimeout ->
-							funcs['change phase']
-								room_id: data.room_id
-								phase_name: 'citizen begin'
-						, 1000
+						killed_player.socket = io.sockets.connected[killed_player.socket_id]
+						killed_player.socket.emit EVENTS['killed']
+						pg.query "DELETE FROM players WHERE id=#{killed_player.id};", ->
+							console.log "Day: mafia has killed player #{result.rows[0].nickname}!"
+
+							pg.query "SELECT COUNT(*) "
+
+							setTimeout ->
+								funcs['change phase']
+									room_id: data.room_id
+									phase_name: 'citizen begin'
+							, 1000
 
 				when 'citizen begin'
 					io.to(data.room_id).emit EVENTS['phase changed'], JSON.stringify
