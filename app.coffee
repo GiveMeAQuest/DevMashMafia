@@ -27,10 +27,6 @@ app.use bodyParser.urlencoded extended: false
 app.use cookieParser()
 app.use express.static path.join __dirname, 'public'
 
-app.use (err, req, res, next)->
-	if req.ip is '89.22.47.142'
-		res.end()
-
 app.use '/', routes
 app.use '/api', api
 app.use '/pages', pages
