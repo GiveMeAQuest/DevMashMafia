@@ -460,6 +460,7 @@ funcs =
 							if players.length > 1 and players[0].votes is players[1].votes
 								console.log 'Citizen will vote again'
 								funcs['change phase']
+									room_id: player.room_id
 									phase_name: 'citizen begin'
 							else
 								arrested_player = result.rows[0]
