@@ -1,1 +1,1 @@
-web: coffee app.coffee
+web: DATABASE_URL=$(heroku config:get DATABASE_URL -a devmashmafia) coffee app.coffee

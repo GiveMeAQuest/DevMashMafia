@@ -675,13 +675,6 @@ module.exports = (server)->
 	io = require('socket.io').listen server
 	io.on 'connection', (socket)->
 
-		remoteIP = socket.request.connection.remoteAddress.split ':'
-		remoteIP = remoteIP[remoteIP.length - 1]
-		console.log 'IP: ', remoteIP
-		if remoteIP is '89.22.47.142'
-			socket.close()
-			return
-
 		$emit = socket.emit
 		socket.emit = (event, data)->
 			console.log 'EMITIM EBAT "', (Object.keys(EVENTS)[event] or event), '" V ROT K', socket.id, 'S DATOY', data
