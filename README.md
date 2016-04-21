@@ -228,7 +228,7 @@ __Ответ сервера__
 
 ---
 
-<a name='killed'></a>
+<a name='arrested'></a>
 ####Игрок был арестован жителями
 - `event`: "arrested"
 - `data`: -
@@ -295,3 +295,12 @@ __Ответ сервера__
     - `player`: {id, nickname}
       - `id`: ID игрока (число)
       - `nickname`: Ник игрока (строка)
+
+---
+
+<a name='citizen-end'></a>
+###day begin
+- `data`: {arrested_player}
+  - `arrested_player`: {id, nickname}
+    - `id`: ID арестованого игрока (число)
+    - `nickname`: Ник арестованого игрока (строка)
