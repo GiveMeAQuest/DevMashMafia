@@ -564,6 +564,12 @@ funcs =
 module.exports = (server)->
 	io = require('socket.io').listen server
 	io.on 'connection', (socket)->
+
+		$emit = socket.emit
+		socket.emit = (event, data)->
+			console.log 'EMITIM EBAT', event,'V ROT K', socket.id, 'S DATOY', data
+			$emit.apply @, Array.prototype.slice.call arguments
+
 		console.log 'new socket connection'
 
 		socket.on EVENTS['join room'], (data)->
