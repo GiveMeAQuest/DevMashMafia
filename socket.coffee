@@ -595,29 +595,43 @@ funcs =
 							console.log 'Error: room doesn\'t exist'
 							return
 						killed_player = result.rows[0]
-						io.to(data.room_id).emit EVENTS['phase changed'], JSON.stringify
-							phase_name: 'day begin'
-							data:
-								killed_player:
-									id: killed_player.id
-									nickname: killed_player.nickname
-						killed_player.socket = io.sockets.connected[killed_player.socket_id]
-						killed_player.socket.emit EVENTS['killed']
-						funcs['leave room'] killed_player.socket
-						console.log "Day: mafia has killed player #{result.rows[0].nickname}!"
+						pg.query "SELECT * FROM players WHERE room_id=#{data.room_id} AND killed_player_id=healed_player_id;", (result)->
+							if result.rows.length isnt 0
+								io.to(data.room_id).emit EVENTS['phase changed'], JSON.stringify
+									phase_name: 'day begin'
+									data:
+										killed_player:
+											id: -1
+								console.log 'Day: mafia hasn\'t killed anyone!'
+								setTimeout ->
+										funcs['change phase']
+											room_id: data.room_id
+											phase_name: 'citizen begin'
+									, 1000
+							else
+								io.to(data.room_id).emit EVENTS['phase changed'], JSON.stringify
+									phase_name: 'day begin'
+									data:
+										killed_player:
+											id: killed_player.id
+											nickname: killed_player.nickname
+								killed_player.socket = io.sockets.connected[killed_player.socket_id]
+								killed_player.socket.emit EVENTS['killed']
+								funcs['leave room'] killed_player.socket
+								console.log "Day: mafia has killed player #{result.rows[0].nickname}!"
 
-						pg.query "WITH mafia_role AS (SELECT id FROM roles WHERE name='mafia') SELECT players.id FROM players, mafia_role WHERE NOT(players.role_id=mafia_role.id) AND players.state=1;", (result)->
-							if result.rows.length is 0
-								console.log 'Mafia won!'
-								io.to(data.room_id).emit EVENTS['end game'],
-									winner: 'mafia'
-								return
+								pg.query "WITH mafia_role AS (SELECT id FROM roles WHERE name='mafia') SELECT players.id FROM players, mafia_role WHERE NOT(players.role_id=mafia_role.id) AND players.state=1;", (result)->
+									if result.rows.length is 0
+										console.log 'Mafia won!'
+										io.to(data.room_id).emit EVENTS['end game'],
+											winner: 'mafia'
+										return
 
-							setTimeout ->
-								funcs['change phase']
-									room_id: data.room_id
-									phase_name: 'citizen begin'
-							, 1000
+									setTimeout ->
+										funcs['change phase']
+											room_id: data.room_id
+											phase_name: 'citizen begin'
+									, 1000
 
 				when 'citizen begin'
 					io.to(data.room_id).emit EVENTS['phase changed'], JSON.stringify
@@ -711,6 +725,9 @@ module.exports = (server)->
 
 		socket.on EVENTS['doctor vote'], (data)->
 			funcs['doctor vote'] socket, data
+
+		socket.on EVENTS['prostitute vote'], (data)->
+			funcs['prostitute vote'] socket, data
 
 		socket.on EVENTS['citizen vote'], (data)->
 			funcs['citizen vote'] socket, data
