@@ -18,6 +18,7 @@ events = [
 	'phase changed'
 	'role'
 	'mafia vote'
+	'sheriff vote'
 ]
 
 events_new = {}

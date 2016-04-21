@@ -370,6 +370,12 @@ funcs =
 		i = findPlayer socket.id
 		player = PLAYERS[i]
 
+		if player.role.name isnt 'sheriff'
+			console.log 'sheriff vote: player is not a sheriff!'
+			socket.emit EVENTS['err'],
+				event: 'sheriff vote'
+				error: 'You are not a sheriff'
+
 		pg.query "WITH player AS (SELECT * FROM players WHERE id=#{data.id}) SELECT player.id, player.nickname, roles.name as role_name FROM roles, player WHERE roles.id=player.role_id;", (result)->
 			if result.rows.length is 0
 				console.log 'sheriff vote: no such player!'
