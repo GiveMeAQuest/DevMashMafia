@@ -91,7 +91,7 @@ describe 'socket events', ->
 
 		data =
 			room_id: @room_id
-			nickname: 'test2'
+			nickname: '\'\"^;\\\\'
 
 		socket2.emit EVENTS['join room'], data
 
