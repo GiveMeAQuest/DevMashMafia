@@ -180,7 +180,7 @@ funcs =
 					error: 'Invalid data!'
 				return
 
-		if isNaN params.players or params.players > 50
+		if isNaN params.players or params.players > 10
 			console.log 'create room: invalid data!'
 			socket.emit EVENTS['err'], JSON.stringify
 				event: 'create room'
@@ -701,7 +701,7 @@ module.exports = (server)->
 
 		$emit = socket.emit
 		socket.emit = (event, data)->
-			#console.log 'EMITIM EBAT "', (Object.keys(EVENTS)[event] or event), '" V ROT K', socket.id, 'S DATOY', data
+			console.log 'EMITIM EBAT "', (Object.keys(EVENTS)[event] or event), '" V ROT K', socket.id, 'S DATOY', data
 			$emit.apply @, Array.prototype.slice.call arguments
 
 		console.log 'new socket connection'
