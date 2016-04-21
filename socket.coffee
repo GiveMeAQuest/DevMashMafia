@@ -345,7 +345,7 @@ funcs =
 							if players.length > 1 and players[0].votes is players[1].votes
 								console.log 'Mafia will vote again'
 								funcs['change phase']
-									phase_name: 'mafia vote'
+									phase_name: 'mafia begin'
 							else
 								killed_player = result.rows[0]
 								i = findPlayer killed_player.socket_id
@@ -403,7 +403,7 @@ funcs =
 		if isNaN data.id
 			console.log 'Error: invalid player ID'
 			socket.emit EVENTS['err'], JSON.stringify
-				event: 'mafia vote'
+				event: 'citizen vote'
 				error: 'Invalid player ID'
 			return
 
@@ -416,26 +416,26 @@ funcs =
 		pg.query "UPDATE players SET votes=votes+1 WHERE id=#{data.id};", ->
 			pg.query "SELECT SUM(votes) FROM players WHERE room_id=#{player.room_id};", (result)->
 				total_votes = result.rows[0].sum
-				pg.query "WITH mafia_role AS (SELECT id FROM roles WHERE name='mafia') SELECT COUNT(players.*) FROM players, mafia_role WHERE room_id=#{player.room_id} AND NOT(role_id=mafia_role.id);", (result)->
+				pg.query "SELECT COUNT(*) FROM players WHERE room_id=#{player.room_id};", (result)->
 					total_players = result.rows[0].count
 
 					if total_votes is total_players
 						pg.query "SELECT id, socket_id, nickname, votes FROM players WHERE room_id=#{player.room_id} ORDER BY votes DESC;", (result)->
 							players = result.rows
 							if players.length > 1 and players[0].votes is players[1].votes
-								console.log 'Mafia will vote again'
+								console.log 'Citizen will vote again'
 								funcs['change phase']
-									phase_name: 'mafia vote'
+									phase_name: 'citizen begin'
 							else
-								killed_player = result.rows[0]
-								i = findPlayer killed_player.socket_id
+								arrested_player = result.rows[0]
+								i = findPlayer arrested_player.socket_id
 								PLAYERS[i].state = 0
-								pg.query "UPDATE players SET state=0 WHERE id=#{killed_player.id};", ->
-									pg.query "UPDATE rooms SET killed_player_id=#{killed_player.id} WHERE id=#{player.room_id};", ->
-										console.log "Mafia killed player #{killed_player.nickname}"
+								pg.query "UPDATE players SET state=0 WHERE id=#{arrested_player.id};", ->
+									pg.query "UPDATE rooms SET killed_player_id=#{arrested_player.id} WHERE id=#{player.room_id};", ->
+										console.log "Citizen arrested player #{arrested_player.nickname}"
 										funcs['change phase']
 											room_id: player.room_id
-											phase_name: 'mafia end'	
+											phase_name: 'citizen end'	
 			
 
 	'change phase': (data)->
@@ -472,9 +472,10 @@ funcs =
 								console.log "emitting 'mafia begin' to #{mafia_player.nickname}"
 								mafia_player.socket.emit EVENTS['phase changed'], JSON.stringify
 									phase_name: 'mafia begin'
-									players: non_mafia_players.map (cur)->
-										id: cur.id
-										nickname: cur.nickname
+									data:
+										players: non_mafia_players.map (cur)->
+											id: cur.id
+											nickname: cur.nickname
 
 				when 'mafia end'
 					pg.query "UPDATE players SET votes=0 WHERE room_id=#{data.room_id};", ->
