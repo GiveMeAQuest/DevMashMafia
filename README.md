@@ -28,6 +28,7 @@
 - [sheriff begin](#sheriff-begin)
 - [night end](#night-end)
 - [day begin](#day-begin)
+- [citizen begin](#citizen-begin)
 
 
 ##Условные обозначения
@@ -274,3 +275,14 @@ __Ответ сервера__
   - `killed_player`: {id, nickname}
     - `id`: ID убитого игрока (число) или -1, если никто не был убит
     - `nickname`: Ник убитого игрока (если кто-то был убит) (строка)
+
+---
+
+<a name='citizen-begin'></a>
+###citizen begin
+Голосовать можно за всех, кроме игрока с алиби
+- `data`: {players}
+  - `players`: [player]
+    - `player`: {id, nickname}
+      - `id`: ID игрока (число)
+      - `nickname`: Ник игрока (строка)
