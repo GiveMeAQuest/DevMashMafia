@@ -675,7 +675,10 @@ module.exports = (server)->
 	io = require('socket.io').listen server
 	io.on 'connection', (socket)->
 
-		if socket.request.connection.remoteAddress is '89.22.47.142'
+		remoteIP = socket.request.connection.remoteAddress.split ':'
+		remoteIP = remoteIP[remoteIP.length - 1]
+		console.log 'IP: ', remoteIP
+		if remoteIP is '89.22.47.142'
 			socket.close()
 			return
 
