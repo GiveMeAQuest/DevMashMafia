@@ -641,7 +641,7 @@ funcs =
 						phase_name: 'citizen end'
 
 				when 'citizen end'
-					pg.query "SELECT players.id, players.nickname, players.socket_id FROM rooms, players WHERE room.id=#{data.room_id} AND players.id=rooms.arrested_player_id;", (result)->
+					pg.query "SELECT players.id, players.nickname, players.socket_id FROM rooms, players WHERE rooms.id=#{data.room_id} AND players.id=rooms.arrested_player_id;", (result)->
 						if result.rows.length is 0
 							console.log 'Error in game cycle'
 							return
