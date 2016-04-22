@@ -19,10 +19,11 @@ private:
     SocketWrapper *socket;
 
 public:
-    explicit RoomJoinView(QWidget *parent = 0, SocketWrapper *socket = 0);
+    explicit RoomJoinView(QWidget *parent = 0,
+                          SocketWrapper *socket = 0);
 
 Q_SIGNALS:
-    void roomJoin(QString, int);
+    void roomJoin(QString, int, bool);
     void createRoom(QString, int);
 
 private Q_SLOTS:

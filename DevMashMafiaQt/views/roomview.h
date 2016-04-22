@@ -18,7 +18,8 @@ class RoomView : public QWidget
 public:
     explicit RoomView(QWidget *parent = 0,
                       SocketWrapper *socket = 0,
-                      int roomId = 0);
+                      int roomId = 0,
+                      bool isHost = false);
     ~RoomView();
 
 private:
@@ -26,11 +27,13 @@ private:
     SocketWrapper *socket;
     QJsonArray playersArray;
     int roomId;
+    bool isHost;
     void updatePlayers();
 
 Q_SIGNALS:
     void getWaitingPlayers();
     void leaveRoom();
+    void startGame();
 
 public Q_SLOTS:
     void players(QJsonArray players);
@@ -38,6 +41,7 @@ public Q_SLOTS:
     void playerLeft(int player_id);
 private Q_SLOTS:
     void on_pushButton_clicked();
+    void on_pushButton_2_clicked();
 };
 
 #endif // ROOMVIEW_H

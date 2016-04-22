@@ -19,17 +19,25 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     socketwrapper.cpp \
     views/roomjoinview.cpp \
-    views/roomview.cpp
+    views/roomview.cpp \
+    views/gameview.cpp \
+    views/voteview.cpp
 
 HEADERS  += mainwindow.h \
     socketwrapper.h \
     roomjoinview.h \
     views/roomjoinview.h \
-    views/roomview.h
+    views/roomview.h \
+    views/gameview.h \
+    views/voteview.h \
+    votemode.h
 
 FORMS    += mainwindow.ui \
     views/roomjoinview.ui \
-    views/roomview.ui
+    views/roomview.ui \
+    views/gameview.ui \
+    voteview.ui \
+    views/voteview.ui
 
 INCLUDEPATH += $$PWD/sioclient/build/include
 DEPENDPATH += $$PWD/sioclient/build/lib

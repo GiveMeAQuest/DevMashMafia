@@ -33,12 +33,12 @@ void SocketWrapper::OnConnected(const string &nsp)
 
 void SocketWrapper::OnClosed(client::close_reason const& reason)
 {
-
+    qDebug() << "Socket has been disconnected";
 }
 
 void SocketWrapper::OnFailed()
 {
-
+    qDebug() << "Socket has been failed";
 }
 
 #ifdef WIN32
@@ -72,6 +72,8 @@ void SocketWrapper::httpReplyFinished(QNetworkReply *reply)
     BIND_EVENT(sock,getSocketEvent(PLAYER_JOINED_EVENT),SocketWrapper::OnPlayerJoined);
     BIND_EVENT(sock,getSocketEvent(PLAYER_LEFT_EVENT),SocketWrapper::OnPlayerLeft);
     BIND_EVENT(sock,getSocketEvent(ROOM_LEFT_EVENT),SocketWrapper::OnRoomLeft);
+    BIND_EVENT(sock,getSocketEvent(ROLE_EVENT),SocketWrapper::OnRole);
+    BIND_EVENT(sock,getSocketEvent(PHASE_CHANGED_EVENT),SocketWrapper::OnPhaseChanged);
     BIND_EVENT(sock,getSocketEvent(ERR_EVENT),SocketWrapper::OnErr);
 }
 
@@ -92,7 +94,7 @@ void SocketWrapper::printEvent(const string &name, const message::ptr &data)
 void SocketWrapper::OnJoinedRoom(const string &name, const message::ptr &data, bool hasAck, message::list &ack_resp)
 {
     printEvent(name, data);
-    Q_EMIT roomJoined(curRoomId);
+    Q_EMIT roomJoined(curRoomId, isHost);
 }
 
 void SocketWrapper::OnCreatedRoom(const string &name, const message::ptr &data, bool hasAck, message::list &ack_resp)
@@ -101,7 +103,7 @@ void SocketWrapper::OnCreatedRoom(const string &name, const message::ptr &data, 
     QJsonObject json = QJsonDocument::fromJson(data->get_string().c_str()).object();
     int room_id = json["id"].toInt();
     curRoomId = room_id;
-    Q_EMIT roomJoin(curNickname, room_id);
+    Q_EMIT roomJoin(curNickname, room_id, true);
 }
 
 void SocketWrapper::OnPlayers(const string &name, const message::ptr &data, bool hasAck, message::list &ack_resp)
@@ -133,19 +135,63 @@ void SocketWrapper::OnRoomLeft(const string &name, const message::ptr &data, boo
     Q_EMIT roomLeft();
 }
 
+void SocketWrapper::OnRole(std::string const& name,message::ptr const& data,bool hasAck,message::list &ack_resp) {
+    printEvent(name, data);
+    QJsonObject roleObj = QJsonDocument::fromJson(data->get_string().c_str()).object();
+    Q_EMIT role(roleObj["name"].toString());
+}
+
+void SocketWrapper::OnNightBegin(std::string const& name,message::ptr const& data,bool hasAck,message::list &ack_resp) {
+    printEvent(name, data);
+    Q_EMIT nightBegin();
+}
+
+void SocketWrapper::OnPhaseChanged(std::string const& name,message::ptr const& data,bool hasAck,message::list &ack_resp) {
+    printEvent(name, data);
+    QJsonObject obj = QJsonDocument::fromJson(data->get_string().c_str()).object();
+    QString phaseName = obj["phase_name"].toString();
+    if (!phaseName.compare(QString(MAFIA_BEGIN))) {
+        QJsonArray players = obj["data"].toObject()["players"].toArray();
+        Q_EMIT mafiaBegin(players, MAFIA);
+    } else if (!phaseName.compare(QString(SHERIFF_BEGIN))) {
+        QJsonArray players = obj["data"].toObject()["players"].toArray();
+        Q_EMIT mafiaBegin(players, SHERIFF);
+    } else if (!phaseName.compare(QString(DOCTOR_BEGIN))) {
+        QJsonArray players = obj["data"].toObject()["players"].toArray();
+        Q_EMIT mafiaBegin(players, DOCTOR);
+    } else if (!phaseName.compare(QString(PROSTITUTE_BEGIN))) {
+        QJsonArray players = obj["data"].toObject()["players"].toArray();
+        Q_EMIT mafiaBegin(players, PROSTITUTE);
+    } else if (!phaseName.compare(QString(CITIZEN_BEGIN))) {
+        QJsonArray players = obj["data"].toObject()["players"].toArray();
+        Q_EMIT mafiaBegin(players, CITIZEN);
+    } else if (!phaseName.compare(QString(NIGHT_BEGIN))) {
+        Q_EMIT nightBegin();
+    } else if (!phaseName.compare(QString(NIGHT_END))) {
+        Q_EMIT nightEnd();
+    } else if (!phaseName.compare(QString(DAY_BEGIN))) {
+        Q_EMIT dayBegin(obj["data"].toObject());
+    } else if (!phaseName.compare(QString(CITIZEN_END))) {
+        Q_EMIT citizenEnd(obj["data"].toObject());
+    } else {
+        qDebug() << "No phase implemented: " << phaseName;
+    }
+}
+
 void SocketWrapper::OnErr(const string &name, const message::ptr &data, bool hasAck, message::list &ack_resp)
 {
     printEvent(name, data);
     Q_EMIT error(QString(data->get_string().c_str()));
 }
 
-void SocketWrapper::roomJoin(QString nickname, int room_id)
+void SocketWrapper::roomJoin(QString nickname, int room_id, bool isHost = false)
 {
     QJsonObject params {
         {"nickname", nickname},
         {"room_id", room_id}
     };
     curRoomId = room_id;
+    this->isHost = isHost;
     sendEvent(QString(JOIN_ROOM_EVENT), params);
 }
 
@@ -169,6 +215,45 @@ void SocketWrapper::leaveRoom()
     QJsonObject params;
     sendEvent(QString(LEAVE_ROOM_EVENT), params);
 }
+
+
+void SocketWrapper::startGame()
+{
+    QJsonObject params;
+    sendEvent(QString(START_GAME_EVENT), params);
+}
+
+
+void SocketWrapper::mafiaChoosen(int player_id, int player_type)
+{
+    QJsonObject params {
+        {"id", player_id}
+    };
+    QString event;
+    switch (player_type) {
+    case MAFIA: {
+        event = QString(MAFIA_VOTE_EVENT);
+    } break;
+    case SHERIFF: {
+        event = QString(SHERIFF_VOTE_EVENT);
+    } break;
+    case DOCTOR: {
+        event = QString(DOCTOR_VOTE_EVENT);
+    } break;
+    case PROSTITUTE: {
+        event = QString(PROSTITUTE_VOTE_EVENT);
+    } break;
+    case CITIZEN: {
+        event = QString(CITIZEN_VOTE_EVENT);
+    } break;
+    default: {
+        qDebug() << "SocketWrapper::mafiaChoosen uknow VoteMode " << player_type;
+    }
+    }
+
+    sendEvent(event, params);
+}
+
 
 void SocketWrapper::sendEvent(QString event, QJsonObject &params)
 {

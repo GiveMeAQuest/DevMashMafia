@@ -3,24 +3,32 @@
 
 RoomView::RoomView(QWidget *parent,
                    SocketWrapper *socket,
-                   int roomId) :
+                   int roomId,
+                   bool isHost) :
     QWidget(parent),
     ui(new Ui::RoomView),
     socket(socket),
-    roomId(roomId)
+    roomId(roomId),
+    isHost(isHost)
 {
     ui->setupUi(this);
+    if (!isHost) {
+        ui->pushButton_2->setVisible(false);
+        ui->label_2->setVisible(false);
+    }
     ui->roomId->setText(QString::number(roomId));
 
     connect(this, SIGNAL(getWaitingPlayers()),
             socket, SLOT(getWaitingPlayers()));
     connect(this, SIGNAL(leaveRoom()),
             socket, SLOT(leaveRoom()));
+    connect(this, SIGNAL(startGame()),
+            socket, SLOT(startGame()));
     connect(socket, SIGNAL(players(QJsonArray)),
             this, SLOT(players(QJsonArray)));
-    connect(socket, SIGNAL(playerJoin(QJsonObject)),Le
+    connect(socket, SIGNAL(playerJoin(QJsonObject)),
             this, SLOT(playerJoin(QJsonObject)));
-    connect(socket, SIGNAL(player),
+    connect(socket, SIGNAL(playerLeft(int)),
             this, SLOT(playerLeft(int)));
     Q_EMIT getWaitingPlayers();
 }
@@ -66,4 +74,9 @@ RoomView::~RoomView()
 void RoomView::on_pushButton_clicked()
 {
     Q_EMIT leaveRoom();
+}
+
+void RoomView::on_pushButton_2_clicked()
+{
+    Q_EMIT startGame();
 }
