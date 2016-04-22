@@ -179,13 +179,22 @@ funcs =
 					event: 'create room'
 					error: 'Invalid data!'
 				return
-
-		if isNaN params.players or params.players > 10
+		
+		if isNaN params.players
 			console.log 'create room: invalid data!'
 			socket.emit EVENTS['err'], JSON.stringify
 				event: 'create room'
 				error: 'Invalid data!'
 			return
+
+		params.players *= 1
+		if params.players > 10
+			console.log 'create room: invalid data!'
+			socket.emit EVENTS['err'], JSON.stringify
+				event: 'create room'
+				error: 'Number of players must be <= 10'
+			return
+			
 		
 		console.log "create room"
 		roomQuery = "INSERT INTO rooms (params_id) VALUES ((select params_id from params)) RETURNING id AS room_id"
@@ -277,11 +286,11 @@ funcs =
 					for role in result.rows
 						roles[role.name] = role
 
-					for player, i in players
-						if player.nickname is 'mafia'
-							players[i].role = roles.mafia
-						else
-							if player.nickname is 'sheriff'
+					players[0].role = roles.mafia
+					if players.length > 1 then players[1].role = roles.prostitute
+					if players.length > 2 then players[2].role = roles.doctor
+
+					###.nickname is 'sheriff'
 								players[i].role = roles.sheriff
 							else
 								if player.nickname is 'doctor'
@@ -290,7 +299,7 @@ funcs =
 									if player.nickname is 'prostitute'
 										players[i].role = roles.prostitute
 									else
-										players[i].role = roles.citizen
+										players[i].role = roles.citizen###
 
 
 					###players[0].role = roles.mafia
@@ -331,12 +340,15 @@ funcs =
 			return
 
 		pg.query "SELECT nickname FROM players WHERE id=#{data.id};", (result)->
+			if result.rows.length is 0
+				console.log 'Error in game cycle'
+				return
 			console.log "Player #{player.nickname} (mafia) voted for #{result.rows[0].nickname}"
 
 		pg.query "UPDATE players SET votes=votes+1 WHERE id=#{data.id};", ->
 			pg.query "SELECT SUM(votes) FROM players WHERE room_id=#{player.room_id};", (result)->
 				total_votes = result.rows[0].sum
-				pg.query "WITH mafia_role AS (SELECT id FROM roles WHERE name='mafia') SELECT COUNT(players.*) FROM players, mafia_role WHERE room_id=#{player.room_id} AND NOT(role_id=mafia_role.id);", (result)->
+				pg.query "WITH mafia_role AS (SELECT id FROM roles WHERE name='mafia') SELECT COUNT(players.*) FROM players, mafia_role WHERE room_id=#{player.room_id} AND role_id=mafia_role.id;", (result)->
 					total_players = result.rows[0].count
 
 					if total_votes is total_players
@@ -461,7 +473,7 @@ funcs =
 
 			alibied_player = result.rows[0]
 
-			console.log 'Prostitute has alibied player #{alibied_player.nickname}'
+			console.log "Prostitute has alibied player #{alibied_player.nickname}"
 			pg.query "UPDATE rooms SET alibied_player_id=#{data.id} WHERE id=#{player.room_id};", ->
 				funcs['change phase']
 					room_id: player.room_id
@@ -647,7 +659,6 @@ funcs =
 								alibied_player = result.rows[0]
 							pg.query "SELECT players.* FROM rooms, players WHERE players.id=rooms.killed_player_id AND players.room_id=#{data.room_id} AND rooms.id=#{data.room_id} AND rooms.killed_player_id=rooms.healed_player_id;", (result)->
 								if result.rows.length isnt 0
-									data =
 									io.to(data.room_id).emit EVENTS['phase changed'], JSON.stringify
 										phase_name: 'day begin'
 										data:
@@ -675,21 +686,24 @@ funcs =
 									killed_player.socket = io.sockets.connected[killed_player.socket_id]
 									console.log "Day: mafia has killed player #{killed_player.nickname}!"
 
+									end_game_flag = off
+
 									pg.query "WITH mafia_role AS (SELECT id FROM roles WHERE name='mafia') SELECT players.id FROM players, mafia_role WHERE players.room_id=#{data.room_id} AND NOT(players.role_id=mafia_role.id) AND players.state=1;", (result)->
 										if result.rows.length is 0
 											console.log 'Mafia won!'
 											io.to(data.room_id).emit EVENTS['end game'],
 												winner: 'mafia'
-											return
+											end_game_flag = on
 
-										killed_player.socket.emit EVENTS['killed']
+										killed_player.socket.emit EVENTS['killed'], '{}'
 										funcs['leave room'] killed_player.socket
 
-										setTimeout ->
-											funcs['change phase']
-												room_id: data.room_id
-												phase_name: 'citizen begin'
-										, 1000
+										if end_game_flag is off
+											setTimeout ->
+												funcs['change phase']
+													room_id: data.room_id
+													phase_name: 'citizen begin'
+											, 1000
 
 				when 'citizen begin'
 					pg.query "UPDATE players SET votes=0 WHERE room_id=#{data.room_id};", ->
@@ -714,28 +728,30 @@ funcs =
 								arrested_player:
 									id: arrested_player.id
 									nickname: arrested_player.nickname
+						end_game_flag = off
 						pg.query "WITH mafia_role AS (SELECT id FROM roles WHERE name='mafia') SELECT players.id FROM players, mafia_role WHERE players.room_id=#{data.room_id} AND players.role_id=mafia_role.id AND players.state=1;", (result)->
 							if result.rows.length is 0
 								console.log 'Citizen won!'
 								io.to(data.room_id).emit EVENTS['end game'], JSON.stringify
 									winner: 'citizen'
-								return
+								end_game_flag = on
 
 							pg.query "WITH mafia_role AS (SELECT id FROM roles WHERE name='mafia') SELECT players.id FROM players, mafia_role WHERE players.room_id=#{data.room_id} AND NOT(players.role_id=mafia_role.id) AND players.state=1;", (result)->
 								if result.rows.length is 0
 									console.log 'Mafia won!'
 									io.to(data.room_id).emit EVENTS['end game'], JSON.stringify
 										winner: 'mafia'
-									return
+									end_game_flag = on
 
-								arrested_player.socket.emit EVENTS['arrested']
+								arrested_player.socket.emit EVENTS['arrested'], '{}'
 								funcs['leave room'] arrested_player.socket
 
-								setTimeout ->
-									funcs['change phase']
-										room_id: data.room_id
-										phase_name: 'day end'
-								, 1000
+								if end_game_flag is off
+									setTimeout ->
+										funcs['change phase']
+											room_id: data.room_id
+											phase_name: 'day end'
+									, 1000
 
 				when 'day end'
 					io.to(data.room_id).emit EVENTS['phase changed'], JSON.stringify
