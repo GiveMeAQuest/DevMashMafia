@@ -290,23 +290,10 @@ funcs =
 					if players.length > 1 then players[1].role = roles.prostitute
 					if players.length > 2 then players[2].role = roles.doctor
 
-					###.nickname is 'sheriff'
-								players[i].role = roles.sheriff
-							else
-								if player.nickname is 'doctor'
-									players[i].role = roles.doctor
-								else
-									if player.nickname is 'prostitute'
-										players[i].role = roles.prostitute
-									else
-										players[i].role = roles.citizen###
-
-
-					###players[0].role = roles.mafia
-					if players.length >= 2
-						players[1].role = roles.citizen
-					if players.length >= 3
-						players[2].role = roles.citizen###
+					roles_list = ['mafia', 'citizen', 'citizen', 'sheriff', 'mafia', 'doctor', 'prostitute', 'mafia', 'citizen', 'mafia']
+					players_count = 0
+					while players.length > players_count
+						players[players_count].role = roles[roles_list[players_count++]]
 
 					for cur_player in players
 						i = findPlayer cur_player.socket.id
